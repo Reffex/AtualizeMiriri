@@ -13,11 +13,14 @@ if (isset($_POST['submit'])) {
     if ($result) {
         $mensagem = "Registrado com sucesso!";
     } else {
-        $mensagem = "Erro ao se registrar: " . mysqli_error($mysqli);
+        if (strpos(mysqli_error($mysqli),' Duplicate entry') !== false) {
+          $mensagem="Este e-mail já esta em uso!";
+        } else {
+          $mensagem="Erro ao se registrar.";
+        }
     }
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="pt-br">
