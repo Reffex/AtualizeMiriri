@@ -2,7 +2,7 @@
 $mensagem = '';
 
 if (isset($_POST['submit'])) {
-    include_once(__DIR__ . '/../connect.php');
+    include_once(__DIR__ . '/includes/connect.php');
 
     $nome = $_POST['nome'];
     $email = $_POST['email'];
@@ -25,7 +25,7 @@ if (isset($_POST['submit'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="./assets/css/styles.css">
     <title>Cadastro - Atualize Miriri</title>
 </head>
 <body>
@@ -57,7 +57,7 @@ if (isset($_POST['submit'])) {
       <button type="submit" name="submit" class="login">Cadastrar</button>
 
       <div class="register-link">
-        <p>Já tem uma conta? <a href="index.html">Voltar ao Login</a></p>
+        <p>Já tem uma conta? <a href="login.php">Voltar ao Login</a></p>
       </div>
     </form>
   </main>
