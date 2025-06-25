@@ -1,6 +1,6 @@
 <?php
-    require_once './includes/auto_check.php';
-    require_once './includes/connect.php';
+    require_once '../../includes/auto_check.php';
+    require_once '../../includes/connect_app.php';
 
     $mensagem='';
 
@@ -10,7 +10,7 @@
 
         if (!empty($nome) && !empty($documento)) {
             $stmt = $mysqli->prepare("INSERT INTO clientes (nome, documento) VALUES (?, ?)");
-            $stmt->bind_param("ss", 'nome', $documento);
+            $stmt->bind_param("ss", $nome, $documento);
             if ($stmt->execute()) {
                 header("Location: listar.php?sucesso=1");
                 exit();
@@ -27,38 +27,47 @@
     }
 ?>
 
-<?php include_once './includes/header.php'; ?>
+<?php include_once '../../includes/header.php'; ?>
 
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="../../assets/css/styles.css">
 </head>
 <body>
-    <div class="container mt -5">
-        <h2> Cadastrar Cliente</h2>
+    <div class="container">
+    <div class="form-box">
+        <h1 style="text-align:center;">Cadastrar Cliente</h1>
 
-        <?php if (!empty($mensagem)); ?>
-            <div class alert alert-warning><?= $mensagem ?></div>
-        <?php 'endif'; ?>
+        <?php if (!empty($mensagem)): ?>
+            <p style="text-align:center; color:<?= strpos($mensagem, 'sucesso') !== false ? 'green' : 'red' ?>; font-weight:bold;">
+                <?= $mensagem ?>
+            </p>
+        <?php endif; ?>
 
         <form method="POST">
-            <div class="mb-3">
-                <label>Nome</label>
-                <input type="text" name="nome" class="form-control" required>
+            <div class="input-box">
+                <input type="text" name="nome" placeholder="Nome Completo" required>
+                <i class='bx bxs-user'></i>
             </div>
 
-            <div class="mb-3">
-                <label>CPF ou CNPJ</label>
-                <input type="text" name="documento" class="form-control" required>
-            </div>         
-            <button type="submit" class="btn btn-sucess">Cadastrar</button>  
-            <a href="listar.php" class="btn btn-secondary">Voltar</a>
+            <div class="input-box">
+                <input type="text" name="documento" placeholder="CPF, CNPJ ou Código" required>
+                <i class='bx bxs-id-card'></i>
+            </div>
+
+            <button type="submit" class="login">Cadastrar</button>
+
+            <div class="register-link">
+                <p><a href="listar.php">Voltar para a lista</a></p>
+            </div>
         </form>
+    </div>
     </div>
 </body>
 </html>
 
-<?php include_once './includes/footer.php'; ?>
+<?php include_once '../../includes/footer.php'; ?>
