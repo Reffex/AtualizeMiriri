@@ -5,8 +5,6 @@
     $clientes = $mysqli->query("SELECT * FROM clientes ORDER BY id DESC");
 ?>
 
-<?php require_once '../../includes/header.php'; ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -54,9 +52,10 @@
                 <?php endif; ?>
             </tbody>
         </table>
+        <div class="register-link">
+                <p><a href="../../index.php">Voltar para o menu</a></p>
+        </div>
     </div>
     </div>
 </body>
 </html>
-
-<?php require_once '../../includes/footer.php' ?>
