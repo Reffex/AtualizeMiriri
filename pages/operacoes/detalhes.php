@@ -46,8 +46,6 @@
     }
 ?>
 
-<?php include_once '../../includes/header.php'; ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -168,5 +166,3 @@
     </div>
 </body>
 </html>
-
-<?php include_once '../../includes/footer.php'; ?>
