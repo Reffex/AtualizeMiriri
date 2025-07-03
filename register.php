@@ -2,7 +2,7 @@
 $mensagem = '';
 
 if (isset($_POST['submit'])) {
-    include_once(__DIR__ . '/includes/connect.php');
+    include_once(__DIR__ . '/includes/connect_app.php');
 
     $nome = $_POST['nome'];
     $email = $_POST['email'];
