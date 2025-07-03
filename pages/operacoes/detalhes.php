@@ -54,6 +54,18 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="../../assets/css/styles.css">
     <style>
+        .form-box-wide {
+            width: 100%;
+            max-width: 500px; 
+            margin: 20px auto;
+            padding: 30px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            color: #000;
+        }
     .extrato-table {
         width: 100%;
         border-collapse: collapse;
@@ -62,7 +74,7 @@
 
     .extrato-table th,
     .extrato-table td {
-        padding: 10px;
+        padding: 15px;
         border-bottom: 1px solid #ccc;
     }
 
@@ -86,9 +98,8 @@
 </style>
 </head>
 <body>
-    <div class="container">
     <div class="form-box-wide">
-        <h1 style="text-align:center;">Detalhes</h1>
+        <h1 style="text-align:center; margin-bottom: 15px;">Detalhes</h1>
 
         <div style="text-align:center; margin-bottom: 20px;">
             <p><strong>Cliente:</strong> <?= htmlspecialchars($op['cliente_nome']) ?></p>
@@ -104,6 +115,7 @@
         </div>
 
         <hr>
+        <br>
         <h3 style="text-align:center;">Extrato de Lançamentos</h3>
 
         <table class="extrato-table">
@@ -130,6 +142,7 @@
         </table>
 
         <hr>
+        <br>
         <h3 style="text-align:center;">Adicionar Lançamento</h3>
 
         <form method="POST">
