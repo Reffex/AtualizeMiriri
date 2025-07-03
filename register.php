@@ -1,8 +1,8 @@
 <?php
-$mensagem = '';
+    $mensagem = '';
 
-if (isset($_POST['submit'])) {
-    include_once(__DIR__ . '/includes/connect_app.php');
+    if (isset($_POST['submit'])) {
+        include_once(__DIR__ . '/includes/connect_app.php');
 
     $nome = $_POST['nome'];
     $email = $_POST['email'];
