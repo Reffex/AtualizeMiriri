@@ -1,22 +1,22 @@
 <?php
-require_once '../../includes/auto_check.php';
-require_once '../../includes/connect_app.php';
+    require_once '../../includes/auto_check.php';
+    require_once '../../includes/connect_app.php';
 
-$mensagem = '';
-if (isset($_GET['sucesso'])) {
+    $mensagem = '';
+        if (isset($_GET['sucesso'])) {
     $mensagem = "Operação cadastrada com sucesso!";
 }
 
-$sql = "SELECT o.*, c.nome AS cliente_nome
+    $sql = "SELECT o.*, c.nome AS cliente_nome
         FROM operacoes o
         JOIN clientes c ON o.cliente_id = c.id
         ORDER BY o.data_criacao DESC";
 
-$operacoes = $mysqli->query($sql);
+    $operacoes = $mysqli->query($sql);
 
-if ($operacoes === false) {
-    die("Erro na consulta SQL: " . $mysqli->error);
-}
+    if ($operacoes === false) {
+        die("Erro na consulta SQL: " . $mysqli->error);
+    }
 ?>
 
 <!DOCTYPE html>
@@ -35,7 +35,7 @@ if ($operacoes === false) {
             background-color: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 10px;
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(20px);
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
             color: #000;
         }
@@ -86,11 +86,11 @@ if ($operacoes === false) {
             <p style="text-align:center; color:green; font-weight:bold;"><?= $mensagem ?></p>
         <?php endif; ?>
 
-        <div style="text-align:center; margin-bottom: 20px;">
-            <a href="criar.php">
-                <button class="login">Nova Operação</button>
-            </a>
-        </div>
+        <div style="text-align:center;">
+    <a href="criar.php">
+        <button class="login" style="width: 300px;">Nova Operação</button>
+    </a>
+</div>
 
         <?php if ($operacoes->num_rows > 0): ?>
             <div style="overflow-x:auto;">
