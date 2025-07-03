@@ -2,7 +2,7 @@
     $host = 'localhost';
     $user = 'root';
     $pass = '';
-    $bd = 'emprestimos';
+    $bd = 'renanprojeto';
 
     $mysqli = new mysqli ($host, $user, $pass, $bd);
     if ($mysqli->connect_errno) {
