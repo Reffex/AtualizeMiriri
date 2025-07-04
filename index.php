@@ -22,8 +22,8 @@
         }
 
         h1 {
-            margin-top: -120px;     /* Sobe mais */
-            margin-bottom: 60px;   /* Espaço maior entre o título e as caixas */
+            margin-top: -135px;     /* Sobe mais */
+            margin-bottom: 75px;   /* Espaço maior entre o título e as caixas */
             text-align: center;
             color: #000;
         }
