@@ -29,7 +29,7 @@
     <style>
         .form-box-wide {
             width: 100%;
-            max-width: 1200px; 
+            max-width: 1100px; 
             margin: 20px auto;
             padding: 30px;
             background-color: rgba(255, 255, 255, 0.1);
@@ -67,6 +67,15 @@
             margin: 10px 0;
         }
 
+        .action-icons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-icons a {
+            text-decoration: none;
+        }
+
         @media (max-width: 768px) {
             .form-box-wide {
                 padding: 15px;
@@ -75,35 +84,50 @@
                 padding: 8px 10px;
                 font-size: 14px;
             }
+            .action-icons {
+                flex-direction: column;
+                gap: 5px;
+            }
         }
     </style>
+<script>
+    setTimeout(function() {
+        const msg = document.getElementById('alerta-msg');
+        if (msg) {
+            msg.style.transition = 'opacity 1s';
+            msg.style.opacity = 0;
+            setTimeout(() => msg.remove(), 1000);
+        }
+    }, 3000);
+</script>
 </head>
 <body>
     <div class="form-box-wide">
         <h1 style="text-align:center;">Operações</h1>
 
         <?php if (!empty($mensagem)): ?>
-            <p style="text-align:center; color:green; font-weight:bold;"><?= $mensagem ?></p>
+            <div id="alerta-msg" style="text-align:center; color:green; font-weight:bold;">
+                <?= $mensagem ?>
+            </div>
         <?php endif; ?>
 
         <div style="text-align:center;">
-    <a href="criar.php">
-        <button class="login" style="width: 300px;">Nova Operação</button>
-    </a>
-</div>
+            <a href="criar.php">
+                <button class="login" style="width: 350px;">Nova Operação</button>
+            </a>
+        </div>
 
         <?php if ($operacoes->num_rows > 0): ?>
             <div style="overflow-x:auto;">
                 <table>
                     <thead>
                         <tr>
-                            <th>Cliente</th>
-                            <th>Identificador</th>
-                            <th>Indexador</th>
-                            <th>Periodicidade</th>
-                            <th>Valor Inicial</th>
-                            <th>Data</th>
-                            <th>Ações</th>
+                            <th>CLIENTE</th>
+                            <th>IDENTIFICADOR</th>
+                            <th>INDEXADOR</th>
+                            <th>PERIODICIDADE</th>
+                            <th>DATA</th>
+                            <th>AÇÕES</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -113,10 +137,19 @@
                                 <td><?= htmlspecialchars($op['identificador']) ?></td>
                                 <td><?= htmlspecialchars($op['indexador']) ?></td>
                                 <td><?= htmlspecialchars($op['periodicidade']) ?></td>
-                                <td>R$ <?= number_format($op['valor_inicial'], 2, ',', '.') ?></td>
                                 <td><?= date('d/m/Y H:i', strtotime($op['data_criacao'])) ?></td>
                                 <td>
-                                    <a href="detalhes.php?id=<?= $op['id'] ?>" style="color: #00A8FF;">Ver</a>
+                                    <div class="action-icons">
+                                        <a href="detalhes.php?id=<?= $op['id'] ?>" title="Detalhes">
+                                            <i class='bx bx-detail' style="font-size: 20px; color: #333; transition: 0.3s;" onmouseover="this.style.color='#007bff'" onmouseout="this.style.color='#333'"></i>
+                                        </a>
+                                        <a href="editar.php?id=<?= $op['id'] ?>" title="Editar">
+                                            <i class='bx bx-edit' style="font-size: 20px; color: #333; transition: 0.3s;" onmouseover="this.style.color='#007bff'" onmouseout="this.style.color='#333'"></i>
+                                        </a>
+                                        <a href="excluir.php?id=<?= $op['id'] ?>" onclick="return confirm('Deseja excluir?')" title="Excluir">
+                                            <i class='bx bx-trash' style="font-size: 20px; color: #333; transition: 0.3s;" onmouseover="this.style.color='red'" onmouseout="this.style.color='#333'"></i>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endwhile; ?>
