@@ -15,7 +15,7 @@
     <style>
         .form-box-wide {
             width: 100%;
-            max-width: 700px; 
+            max-width: 800px; 
             margin: 20px auto;
             padding: 30px;
             background-color: rgba(255, 255, 255, 0.1);
@@ -63,6 +63,16 @@
             }
         }
     </style>
+<script>
+    setTimeout(function() {
+        const msg = document.getElementById('alerta-msg');
+        if (msg) {
+            msg.style.transition = 'opacity 1s';
+            msg.style.opacity = 0;
+            setTimeout(() => msg.remove(), 1000); 
+        }
+    }, 3000);
+</script>
 </head>
 <body>
     <div class="form-box-wide">
@@ -70,8 +80,16 @@
         <h1 style="text-align:center;">Listar Clientes</h1>
 
         <?php if (isset($_GET['sucesso'])): ?>
-            <p style="text-align:center; color:green; font-weight:bold;">Cliente cadastrado com sucesso!</p>
+            <div id="alerta-msg" style="text-align:center; color:green; font-weight:bold;">
+                <?php if ($_GET['sucesso'] == 1): ?>
+                    Cliente cadastrado com sucesso!
+                <?php elseif ($_GET['sucesso'] == 3): ?>
+                    Cliente excluído com sucesso!
+                <?php endif; ?>
+            </div>
         <?php endif; ?>
+
+
 
         <div style="text-align:center; margin-bottom: 20px;">
     <a href="cadastrar.php">
@@ -86,6 +104,7 @@
                     <th style="padding: 10px;">NOME</th>
                     <th style="padding: 10px;">DOCUMENTO</th>
                     <th style="padding: 10px;">DATA</th>
+                    <th style="padding: 10px;">AÇÕES</th>
                 </tr>
             </thead>
             <tbody>
@@ -96,6 +115,14 @@
                             <td style="padding: 10px;"><?= htmlspecialchars($cliente['nome']) ?></td>
                             <td style="padding: 10px;"><?= htmlspecialchars($cliente['documento']) ?></td>
                             <td style="padding: 10px;"><?= date('d/m/Y H:i', strtotime($cliente['data_cadastro'])) ?></td>
+                            <td style="padding: 10px;">
+                                <a href="editar.php?id=<?= $cliente['id'] ?>" title="Editar" style="text-decoration: none;">
+                                    <i class='bx bx-edit' style="font-size: 20px; color: #333; margin-right: 10px; transition: 0.3s;" onmouseover="this.style.color='#007bff'" onmouseout="this.style.color='#333'"></i>
+                                </a>
+                                <a href="excluir.php?id=<?= $cliente['id'] ?>" onclick="return confirm('Deseja excluir?')" title="Excluir" style="text-decoration: none;">
+                                    <i class='bx bx-trash' style="font-size: 20px; color: #333; transition: 0.3s;" onmouseover="this.style.color='red'" onmouseout="this.style.color='#333'"></i>
+                                </a>
+                        </td>
                         </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
