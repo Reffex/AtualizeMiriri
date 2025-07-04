@@ -66,35 +66,40 @@
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
             color: #000;
         }
-    .extrato-table {
-        width: 100%;
-        border-collapse: collapse;
-        text-align: center;
-    }
+        .extrato-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
 
-    .extrato-table th,
-    .extrato-table td {
-        padding: 15px;
-        border-bottom: 1px solid #ccc;
-    }
+        .extrato-table th,
+        .extrato-table td {
+            padding: 15px;
+            border-bottom: 1px solid #ccc;
+        }
 
-    .extrato-table thead tr {
-        font-weight: bold;
-        border-bottom: 2px solid #000;
-    }
-
-    .input-box select {
-        width: 100%;
-        height: 100%;
-        background-color: transparent;
-        border: 2px solid rgba(255, 255, 255, .2);
-        border-radius: 40px;
-        outline: none;
-        font-size: 16px;
-        color: #333;
-        padding: 10px 45px 10px 20px;
-        appearance: none;
-    }
+        .extrato-table thead tr {
+            font-weight: bold;
+            border-bottom: 2px solid #000;
+        }
+        
+        .input-box select,
+        .input-box input {
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7);
+            border: 2px solid rgba(255, 255, 255, .2);
+            border-radius: 40px;
+            outline: none;
+            font-size: 16px;
+            color: #333;
+            padding: 10px 45px 10px 20px;
+        }
+    
+        .input-box select {
+            appearance: none;
+        }
 </style>
 </head>
 <body>
@@ -116,7 +121,7 @@
 
         <hr>
         <br>
-        <h3 style="text-align:center;">Extrato de Lançamentos</h3>
+        <h3 style="text-align:center; margin-bottom: 20px;">Extrato de Lançamentos</h3>
 
         <table class="extrato-table">
             <thead>
