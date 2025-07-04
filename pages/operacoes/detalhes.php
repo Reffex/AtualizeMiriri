@@ -5,7 +5,7 @@
     $id = $_GET['id'] ?? null;
     if (!$id) {
         echo "ID da operação inválido.";
-    exit;
+        exit;
     }
 
     $op = $mysqli->query("
@@ -21,6 +21,7 @@
         ORDER BY data ASC
     ");
 
+    // Cálculo do saldo
     $saldo = $op['valor_inicial'];
     $lancamentos->data_seek(0);
     while ($l = $lancamentos->fetch_assoc()) {
@@ -56,7 +57,7 @@
     <style>
         .form-box-wide {
             width: 100%;
-            max-width: 500px; 
+            max-width: 1000px; 
             margin: 20px auto;
             padding: 30px;
             background-color: rgba(255, 255, 255, 0.1);
@@ -66,22 +67,84 @@
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
             color: #000;
         }
-        .extrato-table {
+        
+        .info-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .info-header p {
+            margin: 5px 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .tabela-lancamentos {
             width: 100%;
             border-collapse: collapse;
-            text-align: center;
+            margin-bottom: 30px;
             background-color: rgba(255, 255, 255, 0.7);
         }
-
-        .extrato-table th,
-        .extrato-table td {
-            padding: 15px;
-            border-bottom: 1px solid #ccc;
+        
+        .tabela-lancamentos th,
+        .tabela-lancamentos td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: center;
         }
-
-        .extrato-table thead tr {
-            font-weight: bold;
-            border-bottom: 2px solid #000;
+        
+        .tabela-lancamentos th {
+            background-color: rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+        }
+        
+        .tabela-lancamentos tr:nth-child(even) {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .tabela-extrato {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .tabela-extrato th,
+        .tabela-extrato td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        
+        .tabela-extrato th {
+            background-color: rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+        }
+        
+        .resumo-extrato {
+            margin-bottom: 20px;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 15px;
+            border-radius: 5px;
+        }
+        
+        .resumo-extrato table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .resumo-extrato th,
+        .resumo-extrato td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        
+        .input-box {
+            margin: 15px 0;
         }
         
         .input-box select,
@@ -96,40 +159,81 @@
             color: #333;
             padding: 10px 45px 10px 20px;
         }
-    
+        
         .input-box select {
             appearance: none;
         }
-</style>
+        
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .button-group button {
+            padding: 10px 20px;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            background-color: #fff;
+        }
+        
+        .button-group button:hover {
+            background-color: transparent;
+            border: 2px solid rgba(255, 255, 255, .2);
+            color: #fff;
+            transition: 0.5s;
+        }
+        
+        .debito {
+            color: red;
+        }
+        
+        .credito {
+            color: green;
+        }
+    </style>
 </head>
 <body>
     <div class="form-box-wide">
-        <h1 style="text-align:center; margin-bottom: 15px;">Detalhes</h1>
+        <div class="info-header">
+             <h2 class="section-title">Lançamentos</h2>
 
-        <div style="text-align:center; margin-bottom: 20px;">
-            <p><strong>Cliente:</strong> <?= htmlspecialchars($op['cliente_nome']) ?></p>
-            <p><strong>Identificador:</strong> <?= htmlspecialchars($op['identificador']) ?></p> 
-            <p><strong>Indexador:</strong> <?= $op['indexador'] ?></p>
-            <p><strong>Periodicidade:</strong> <?= $op['periodicidade'] ?></p>
-            <p><strong>Valor Inicial:</strong> R$ <?= number_format($op['valor_inicial'], 2, ',', '.') ?></p>
-            <p><strong>Saldo Atual:</strong> 
-                <span style="color: <?= $saldo >= 0 ? 'green' : 'red' ?>;">
-                    R$ <?= number_format($saldo, 2, ',', '.') ?>
-                </span>
-            </p>
-        </div>
+        <form method="POST">
+            <div class="input-box">
+                <input type="date" name="data" required>
+            </div>
 
-        <hr>
-        <br>
-        <h3 style="text-align:center; margin-bottom: 20px;">Extrato de Lançamentos</h3>
+            <div class="input-box">
+                <input type="text" name="descricao" placeholder="Descrição" required>
+            </div>
 
-        <table class="extrato-table">
+            <div class="input-box">
+                <select name="tipo" required>
+                    <option value="debito">Débito</option>
+                    <option value="credito">Crédito</option>
+                </select>
+            </div>
+
+            <div class="input-box">
+                <input type="number" step="0.01" name="valor" placeholder="Valor" required>
+            </div>
+
+            <div class="button-group">
+                <button type="submit">Salvar</button>
+                <button type="button" onclick="window.location.href='listar.php'">Cancelar</button>
+            </div>
+        </form>
+
+        <table class="tabela-lancamentos">
             <thead>
                 <tr>
                     <th>Data</th>
                     <th>Descrição</th>
-                    <th>Tipo</th>
                     <th>Valor</th>
+                    <th>Tipo</th>
                 </tr>
             </thead>
             <tbody>
@@ -139,48 +243,84 @@
                     <tr>
                         <td><?= date('d/m/Y', strtotime($l['data'])) ?></td>
                         <td><?= htmlspecialchars($l['descricao']) ?></td>
+                        <td class="<?= $l['tipo'] === 'debito' ? 'debito' : 'credito' ?>">
+                            R$ <?= number_format($l['valor'], 2, ',', '.') ?>
+                        </td>
                         <td><?= ucfirst($l['tipo']) ?></td>
-                        <td>R$ <?= number_format($l['valor'], 2, ',', '.') ?></td>
+                    </tr>
+                <?php endwhile; ?>
+            </tbody>1zz
+        </table>
+
+        <h2 class="section-title">Extrato do Cálculo</h2>
+        <div class="resumo-extrato">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Movimentação acumulada</th>
+                        <th>Correção monetária acumulada</th>
+                        <th>Juros acumulados</th>
+                        <th>Multa</th>
+                        <th>Honorários</th>
+                        <th>Saldo total atualizado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>R$ <?= number_format($saldo, 2, ',', '.') ?></td>
+                        <td>R$ 0,00</td>
+                        <td>R$ 0,00</td>
+                        <td>R$ 0,00</td>
+                        <td>R$ 0,00</td>
+                        <td>R$ <?= number_format($saldo, 2, ',', '.') ?></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <table class="tabela-extrato">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Descrição</th>
+                    <th>Débito</th>
+                    <th>Crédito</th>
+                    <th>Saldo</th>
+                    <th>Índice</th>
+                    <th>Dias úteis</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $lancamentos->data_seek(0);
+                $saldo_parcial = $op['valor_inicial'];
+                while ($l = $lancamentos->fetch_assoc()): 
+                    if ($l['tipo'] === 'debito') {
+                        $debito = number_format($l['valor'], 2, ',', '.');
+                        $credito = '';
+                        $saldo_parcial -= $l['valor'];
+                    } else {
+                        $debito = '';
+                        $credito = number_format($l['valor'], 2, ',', '.');
+                        $saldo_parcial += $l['valor'];
+                    }
+                ?>
+                    <tr>
+                        <td><?= date('d/m/Y', strtotime($l['data'])) ?></td>
+                        <td><?= htmlspecialchars($l['descricao']) ?></td>
+                        <td><?= $debito ?></td>
+                        <td><?= $credito ?></td>
+                        <td>R$ <?= number_format($saldo_parcial, 2, ',', '.') ?></td>
+                        <td>-</td>
+                        <td>-</td>
                     </tr>
                 <?php endwhile; ?>
             </tbody>
         </table>
-
-        <hr>
-        <br>
-        <h3 style="text-align:center;">Adicionar Lançamento</h3>
-
-        <form method="POST">
-            <div class="input-box">
-                <input type="date" name="data" required>
-                <i class='bx bxs-calendar'></i>
-            </div>
-
-            <div class="input-box">
-                <input type="text" name="descricao" placeholder="Descrição" required>
-                <i class='bx bxs-pencil'></i>
-            </div>
-
-            <div class="input-box">
-                <select name="tipo" required>
-                    <option value="credito">Crédito</option>
-                    <option value="debito">Débito</option>
-                </select>
-                <i class='bx bxs-wallet'></i>
-            </div>
-
-            <div class="input-box">
-                <input type="number" step="0.01" name="valor" placeholder="Valor" required>
-                <i class='bx bxs-dollar-circle'></i>
-            </div>
-
-            <button type="submit" class="login">Adicionar Lançamento</button>
-
-            <div class="register-link">
-                <p><a href="listar.php">Voltar para Operações</a></p>
-            </div>
-        </form>
-    </div>
+        
+        <div class="button-group" style="margin-top: 30px;">
+            <button onclick="window.location.href='listar.php'">Voltar para Operações</button>
+        </div>
     </div>
 </body>
 </html>
