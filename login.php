@@ -1,12 +1,12 @@
 <?php
-session_start();
-include_once 'includes/connect_app.php';
+    session_start();
+    include_once 'includes/connect_app.php';
 
-$erro = '';
+    $erro = '';
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $email = $_POST['email'] ?? '';
-    $senha = $_POST['senha'] ?? '';
+    if ($_SERVER["REQUEST_METHOD"] === "POST") {
+        $email = $_POST['email'] ?? '';
+        $senha = $_POST['senha'] ?? '';
 
     if (empty($email) || empty($senha)) {
         $erro = "Preencha todos os campos!";
@@ -39,16 +39,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-  <link rel="stylesheet" href="./assets/css/styles.css">
-  <title>Atualize Miriri - Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="./assets/css/styles.css">
+    <title>Atualize Miriri - Login</title>
 </head>
 <body>
 <main class="container">
-  <form action="login.php" method="POST">
-    <h1>Login</h1>
+    <form action="login.php" method="POST">
+    <h1>Atualize Miriri</h1>
 
     <?php if (!empty($erro)): ?>
       <p style="color: red; text-align: center;"><?= $erro ?></p>
@@ -74,7 +74,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <div class="register-link">
       <p>Não tem uma conta? <a href="register.php">Cadastre-se</a></p>
     </div>
-  </form>
+    </form>
 </main>
 </body>
 </html>
