@@ -5,7 +5,7 @@
     $mensagem = '';
         if (isset($_GET['sucesso'])) {
     $mensagem = "Operação cadastrada com sucesso!";
-}
+    }
 
     $sql = "SELECT o.*, c.nome AS cliente_nome
         FROM operacoes o
