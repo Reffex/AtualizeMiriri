@@ -27,7 +27,18 @@ CREATE TABLE IF NOT EXISTS `clientes` (
   `data_cadastro` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `documento` (`documento`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Exportação de dados foi desmarcado.
+
+-- Copiando estrutura para tabela renanprojeto.indices
+CREATE TABLE IF NOT EXISTS `indices` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nome` varchar(20) DEFAULT NULL,
+  `mes_ano` date DEFAULT NULL,
+  `valor` decimal(10,4) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Exportação de dados foi desmarcado.
 
@@ -42,7 +53,7 @@ CREATE TABLE IF NOT EXISTS `lancamentos` (
   PRIMARY KEY (`id`),
   KEY `operacao_id` (`operacao_id`),
   CONSTRAINT `lancamentos_ibfk_1` FOREIGN KEY (`operacao_id`) REFERENCES `operacoes` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Exportação de dados foi desmarcado.
 
@@ -54,10 +65,22 @@ CREATE TABLE IF NOT EXISTS `operacoes` (
   `indexador` varchar(50) NOT NULL,
   `periodicidade` varchar(20) NOT NULL,
   `valor_inicial` decimal(10,2) NOT NULL,
+  `atualizar_ate` date DEFAULT NULL,
+  `atualizar_dia_debito` int(11) DEFAULT NULL,
+  `atualizar_correcao_monetaria` decimal(10,3) DEFAULT NULL,
+  `atualizar_juros_nominais` decimal(10,3) DEFAULT NULL,
+  `alterar_taxas_em` date DEFAULT NULL,
+  `alterar_dia_debito` int(11) DEFAULT NULL,
+  `alterar_correcao_monetaria` decimal(10,3) DEFAULT NULL,
+  `alterar_juros_nominais` decimal(10,3) DEFAULT NULL,
+  `valor_multa` decimal(10,2) DEFAULT NULL,
+  `valor_honorarios` decimal(10,2) DEFAULT NULL,
+  `observacao` text DEFAULT NULL,
+  `data_criacao` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `cliente_id` (`cliente_id`),
   CONSTRAINT `operacoes_ibfk_1` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Exportação de dados foi desmarcado.
 
