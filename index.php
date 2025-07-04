@@ -22,9 +22,10 @@
         }
 
         h1 {
-            margin-bottom: 40px;
+            margin-top: -120px;     /* Sobe mais */
+            margin-bottom: 60px;   /* Espaço maior entre o título e as caixas */
             text-align: center;
-            color: #000; /* Garante que o título fique preto */
+            color: #000;
         }
 
         .menu-row {
@@ -48,8 +49,8 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            background-color:transparent;
-            border: 2px solid rgba(255, 255, 255, .2); /* Borda transparente */
+            background-color: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.2);
             padding: 20px;
             text-align: center;
             border-radius: 10px;
@@ -58,29 +59,31 @@
         }
 
         .menu-box strong {
-            color: #000; /* Texto em preto */
+            color: #000;
             font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .menu-box .menu-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #000;
+            transition: color 0.3s ease;
         }
 
         .menu-box:hover {
-            background-color: rgba(255, 255, 255, 0.7);
-            border: 2px solid rgba(0, 0, 0, 0.1); /* Borda sutil no hover */
-        }
-
-        .menu-icon {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            color: #000; /* Ícones pretos */
-        }
-
-        .menu-box:hover .menu-icon {
-            color: #000; /* Mantém ícones pretos no hover */
+            background-color: transparent;
+            border: 2px solid rgba(255, 255, 255, .2);
+            transition: 0.5s;
         }
 
         .menu-box:hover strong {
-            color: #000; /* Mantém texto preto no hover */
+            color: #fff;
         }
-        
+
+        .menu-box:hover .menu-icon {
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -89,19 +92,19 @@
     <div class="menu-row">
         <a href="pages/clientes/listar.php" class="menu-link">
             <div class="menu-box">
-                <div class="menu-icon"><i class='bx bx-group'></i></i></div>
+                <div class="menu-icon"><i class='bx bx-group'></i></div>
                 <strong>Clientes</strong>
             </div>
         </a>
         <a href="pages/operacoes/listar.php" class="menu-link">
             <div class="menu-box">
-                <div class="menu-icon"><i class='bx bx-folder'></i></i></div>
+                <div class="menu-icon"><i class='bx bx-folder'></i></div>
                 <strong>Operações</strong>
             </div>
         </a>
         <a href="pages/operacoes/criar.php" class="menu-link">
             <div class="menu-box">
-                <div class="menu-icon"><i class='bx bx-file'></i></i></div>
+                <div class="menu-icon"><i class='bx bx-file'></i></div>
                 <strong>Nova Operação</strong>
             </div>
         </a>
