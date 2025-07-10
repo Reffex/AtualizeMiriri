@@ -1,38 +1,40 @@
 <?php
-    $mensagem = '';
+$mensagem = '';
 
-    if (isset($_POST['submit'])) {
-        include_once(__DIR__ . '/includes/connect_app.php');
+if (isset($_POST['submit'])) {
+  include_once(__DIR__ . '/includes/connect_app.php');
 
-    $nome = $_POST['nome'];
-    $email = $_POST['email'];
-    $senha = password_hash($_POST['senha'], PASSWORD_DEFAULT);
+  $nome = $_POST['nome'];
+  $email = $_POST['email'];
+  $senha = password_hash($_POST['senha'], PASSWORD_DEFAULT);
 
-    $result = mysqli_query($mysqli, "INSERT INTO usuarios(nome, email, senha) VALUES ('$nome', '$email', '$senha')");
+  $result = mysqli_query($mysqli, "INSERT INTO usuarios(nome, email, senha) VALUES ('$nome', '$email', '$senha')");
 
-    if ($result) {
-        $mensagem = "Registrado com sucesso!";
+  if ($result) {
+    $mensagem = "Registrado com sucesso!";
+  } else {
+    if (strpos(mysqli_error($mysqli), ' Duplicate entry') !== false) {
+      $mensagem = "Este e-mail já esta em uso!";
     } else {
-        if (strpos(mysqli_error($mysqli),' Duplicate entry') !== false) {
-          $mensagem="Este e-mail já esta em uso!";
-        } else {
-          $mensagem="Erro ao se registrar.";
-        }
+      $mensagem = "Erro ao se registrar.";
     }
+  }
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="./assets/css/styles.css">
-    <title>Cadastro - Atualize Miriri</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="./assets/css/styles.css">
+  <title>Cadastro - Atualize Miriri</title>
 </head>
+
 <body>
-    <main class="container">
+  <main class="container">
     <?php if (!empty($mensagem)): ?>
       <p style="text-align:center; color: <?= strpos($mensagem, 'Erro') !== false ? 'red' : 'green' ?>;">
         <?= $mensagem ?>
@@ -65,4 +67,5 @@
     </form>
   </main>
 </body>
+
 </html>
