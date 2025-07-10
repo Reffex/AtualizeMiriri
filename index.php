@@ -1,9 +1,10 @@
 <?php
-    require_once 'includes/auto_check.php';
+require_once 'includes/auto_check.php';
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,8 +23,8 @@
         }
 
         h1 {
-            margin-top: -135px;     /* Sobe mais */
-            margin-bottom: 75px;   /* Espaço maior entre o título e as caixas */
+            margin-top: -135px;
+            margin-bottom: 75px;
             text-align: center;
             color: #000;
         }
@@ -36,8 +37,8 @@
         }
 
         .menu-link {
-            flex: 1 1 calc(25% - 20px);
-            max-width: calc(25% - 20px);
+            flex: 1 1 calc(20% - 20px);
+            max-width: calc(20% - 20px);
             text-decoration: none;
             display: flex;
         }
@@ -55,7 +56,7 @@
             text-align: center;
             border-radius: 10px;
             transition: all 0.3s ease;
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(10px);
         }
 
         .menu-box strong {
@@ -86,35 +87,43 @@
         }
     </style>
 </head>
+
 <body>
-<div class="main-wrapper">
-    <h1 class="text-center">Bem-Vindo, <?= $_SESSION['usuario_nome'] ?? 'Usuário' ?>!</h1>
-    <div class="menu-row">
-        <a href="pages/clientes/listar.php" class="menu-link">
-            <div class="menu-box">
-                <div class="menu-icon"><i class='bx bx-group'></i></div>
-                <strong>Clientes</strong>
-            </div>
-        </a>
-        <a href="pages/operacoes/listar.php" class="menu-link">
-            <div class="menu-box">
-                <div class="menu-icon"><i class='bx bx-folder'></i></div>
-                <strong>Operações</strong>
-            </div>
-        </a>
-        <a href="pages/operacoes/criar.php" class="menu-link">
-            <div class="menu-box">
-                <div class="menu-icon"><i class='bx bx-file'></i></div>
-                <strong>Nova Operação</strong>
-            </div>
-        </a>
-        <a href="logout.php" class="menu-link">
-            <div class="menu-box">
-                <div class="menu-icon"><i class='bx bx-log-out'></i></div>
-                <strong>Sair</strong>
-            </div>
-        </a>
+    <div class="main-wrapper">
+        <h1 class="text-center">Bem-Vindo, <?= $_SESSION['usuario_nome'] ?? 'Usuário' ?>!</h1>
+        <div class="menu-row">
+            <a href="pages/clientes/listar.php" class="menu-link">
+                <div class="menu-box">
+                    <div class="menu-icon"><i class='bx bx-group'></i></div>
+                    <strong>Clientes</strong>
+                </div>
+            </a>
+            <a href="pages/operacoes/criar.php" class="menu-link">
+                <div class="menu-box">
+                    <div class="menu-icon"><i class='bx bx-file'></i></div>
+                    <strong>Nova Operação</strong>
+                </div>
+            </a>
+            <a href="pages/operacoes/listar.php" class="menu-link">
+                <div class="menu-box">
+                    <div class="menu-icon"><i class='bx bx-folder'></i></div>
+                    <strong>Operações</strong>
+                </div>
+            </a>
+            <a href="pages/calculos/indices.php" class="menu-link">
+                <div class="menu-box">
+                    <div class="menu-icon"><i class='bx bx-search'></i></div>
+                    <strong>Consultar Indices</strong>
+                </div>
+            </a>
+            <a href="logout.php" class="menu-link">
+                <div class="menu-box">
+                    <div class="menu-icon"><i class='bx bx-log-out'></i></div>
+                    <strong>Sair</strong>
+                </div>
+            </a>
+        </div>
     </div>
-</div>
 </body>
+
 </html>
