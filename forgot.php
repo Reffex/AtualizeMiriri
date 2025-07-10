@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="./assets/css/styles.css">
-    <title>Recuperar Senha - Atualize Miriri</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="./assets/css/styles.css">
+  <title>Recuperar Senha - Atualize Miriri</title>
 </head>
+
 <body>
-   <main class="container">
+  <main class="container">
     <form>
       <h1>Recuperar Senha</h1>
 
@@ -23,6 +25,7 @@
         <p>Lembrou sua senha? <a href="login.php">Voltar ao Login</a></p>
       </div>
     </form>
-  </main> 
+  </main>
 </body>
+
 </html>
