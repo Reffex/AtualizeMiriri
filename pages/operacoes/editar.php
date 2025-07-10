@@ -11,11 +11,12 @@ if (!$id) {
 }
 
 $stmt = $mysqli->prepare("
-    SELECT o.*, c.nome AS cliente_nome
-    FROM operacoes o
-    JOIN clientes c ON c.id = o.cliente_id
-    WHERE o.id = ?
-");
+        SELECT o.*, c.nome AS cliente_nome
+        FROM operacoes o
+        JOIN clientes c ON c.id = o.cliente_id
+        WHERE o.id = ?
+    ");
+
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -28,11 +29,11 @@ if (!$op) {
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $stmt = $mysqli->prepare("UPDATE operacoes SET 
-        identificador = ?, indexador = ?, periodicidade = ?, 
-        atualizar_ate = ?, atualizar_dia_debito = ?, atualizar_correcao_monetaria = ?, atualizar_juros_nominais = ?, 
-        alterar_taxas_em = ?, alterar_dia_debito = ?, alterar_correcao_monetaria = ?, alterar_juros_nominais = ?, 
-        valor_multa = ?, valor_honorarios = ?, observacao = ?
-        WHERE id = ?
+            identificador = ?, indexador = ?, periodicidade = ?, 
+            atualizar_ate = ?, atualizar_dia_debito = ?, atualizar_correcao_monetaria = ?, atualizar_juros_nominais = ?, 
+            alterar_taxas_em = ?, alterar_dia_debito = ?, alterar_correcao_monetaria = ?, alterar_juros_nominais = ?, 
+            valor_multa = ?, valor_honorarios = ?, observacao = ?
+            WHERE id = ?
     ");
 
     $stmt->bind_param(
@@ -65,6 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <title>Editar Operação</title>
@@ -75,10 +77,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             max-width: 1000px;
             margin: 20px auto;
             padding: 30px;
-            background-color: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 10px;
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(10px);
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
             color: #000;
         }
@@ -156,16 +157,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             .form-box {
                 padding: 15px;
             }
+
             .form-row {
                 flex-direction: column;
                 gap: 15px;
             }
+
             .form-item {
                 min-width: 100%;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="form-box">
         <h1 style="text-align:center; margin-bottom: 25px;">Editar Operação</h1>
@@ -267,9 +271,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             <div class="button-group">
                 <button type="submit">Salvar alterações</button>
-                <button type="button" onclick="window.location.href='listar.php'">Cancelar</button>
+            </div>
+            <div class="register-link">
+                <p><a href="../../pages/operacoes/listar.php">Voltar para operações</a></p>
             </div>
         </form>
     </div>
 </body>
+
 </html>
