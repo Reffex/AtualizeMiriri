@@ -1,31 +1,31 @@
 <?php
-    require_once '../../includes/auto_check.php';
-    require_once '../../includes/connect_app.php';
+require_once '../../includes/auto_check.php';
+require_once '../../includes/connect_app.php';
 
-    $mensagem = '';
-    $clientes = $mysqli->query("SELECT id, nome FROM clientes ORDER BY nome");
+$mensagem = '';
+$clientes = $mysqli->query("SELECT id, nome FROM clientes ORDER BY nome");
 
-    if ($_SERVER["REQUEST_METHOD"] === "POST") {
-        $cliente_id = $_POST['cliente_id'];
-        $identificador = $_POST['identificador'];
-        $indexador = $_POST['indexador'];
-        $periodicidade = $_POST['periodicidade'];
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $cliente_id = $_POST['cliente_id'];
+    $identificador = $_POST['identificador'];
+    $indexador = $_POST['indexador'];
+    $periodicidade = $_POST['periodicidade'];
 
-        $atualizar_ate = $_POST['atualizar_ate'];
-        $atualizar_dia_debito = $_POST['atualizar_dia_debito'];
-        $atualizar_correcao_monetaria = $_POST['atualizar_correcao_monetaria'];
-        $atualizar_juros_nominais = $_POST['atualizar_juros_nominais'];
+    $atualizar_ate = $_POST['atualizar_ate'];
+    $atualizar_dia_debito = $_POST['atualizar_dia_debito'];
+    $atualizar_correcao_monetaria = $_POST['atualizar_correcao_monetaria'];
+    $atualizar_juros_nominais = $_POST['atualizar_juros_nominais'];
 
-        $alterar_taxas_em = $_POST['alterar_taxas_em'];
-        $alterar_dia_debito = $_POST['alterar_dia_debito'];
-        $alterar_correcao_monetaria = $_POST['alterar_correcao_monetaria'];
-        $alterar_juros_nominais = $_POST['alterar_juros_nominais'];
+    $alterar_taxas_em = $_POST['alterar_taxas_em'];
+    $alterar_dia_debito = $_POST['alterar_dia_debito'];
+    $alterar_correcao_monetaria = $_POST['alterar_correcao_monetaria'];
+    $alterar_juros_nominais = $_POST['alterar_juros_nominais'];
 
-        $valor_multa = $_POST['valor_multa'];
-        $valor_honorarios = $_POST['valor_honorarios'];
-        $observacao = $_POST['observacao'];
+    $valor_multa = $_POST['valor_multa'];
+    $valor_honorarios = $_POST['valor_honorarios'];
+    $observacao = $_POST['observacao'];
 
-        $stmt = $mysqli->prepare("INSERT INTO operacoes (
+    $stmt = $mysqli->prepare("INSERT INTO operacoes (
             cliente_id, identificador, indexador, periodicidade,
             atualizar_ate, atualizar_dia_debito, atualizar_correcao_monetaria, atualizar_juros_nominais,
             alterar_taxas_em, alterar_dia_debito, alterar_correcao_monetaria, alterar_juros_nominais,
@@ -61,7 +61,7 @@
     } else {
         $mensagem = "Erro na query: " . $mysqli->error;
     }
-    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -76,10 +76,9 @@
             max-width: 1000px;
             margin: 20px auto;
             padding: 30px;
-            background-color: rgba(255, 255, 255, 0.1);
             border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 10px;
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(10px);
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
             color: #000;
         }
@@ -109,7 +108,7 @@
             padding: 10px;
             border-radius: 40px;
             background-color: rgba(255, 255, 255, 0.7);
-            color: #000;
+            color: #333;
             border: 2px solid rgba(255, 255, 255, .2);
         }
 
@@ -157,19 +156,22 @@
             .form-box {
                 padding: 15px;
             }
+
             .form-row {
                 flex-direction: column;
                 gap: 15px;
             }
+
             .form-item {
                 min-width: 100%;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="form-box">
-        <h1 style="text-align:center; margin-bottom: 25px;">Nova Operação</h1>
+        <h1 style="text-align:center; margin-bottom: 10px;">Nova Operação</h1>
         <?php if (!empty($mensagem)): ?>
             <p style="color:red; text-align:center;"><?= $mensagem ?></p>
         <?php endif; ?>
@@ -197,7 +199,7 @@
                 <div class="form-item">
                     <label for="indexador">Indexador:</label>
                     <select name="indexador" required>
-                        <option value="INPC">INPC</option>
+                        <option value="SELIC">SELIC</option>
                         <option value="CDI">CDI</option>
                         <option value="IPCA">IPCA</option>
                     </select>
@@ -273,9 +275,12 @@
 
             <div class="button-group">
                 <button type="submit">Criar operação</button>
-                <button type="button" onclick="window.location.href='listar.php'">Cancelar</button>
+            </div>
+            <div class="register-link">
+                <p><a href="listar.php">Voltar para a lista</a></p>
             </div>
         </form>
     </div>
 </body>
+
 </html>
