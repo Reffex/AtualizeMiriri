@@ -57,6 +57,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -209,23 +210,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <tr style="font-weight:bold; border-bottom: 2px solid #000;">
                         <th>DATA</th>
                         <th>DESCRIÇÃO</th>
-                        <th>VALOR</th>
-                        <th>TIPO</th>
+                        <th>DÉBITO</th>
+                        <th>CRÉDITO</th>
+                        <th>SALDO</th>
+                        <th>ÍNDICES</th>
+                        <th>DIAS ÚTEIS</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php
-                    $lancamentos->data_seek(0);
-                    while ($l = $lancamentos->fetch_assoc()): ?>
+                    <?php foreach ($valores['extrato_detalhado'] as $linha): ?>
                         <tr>
-                            <td><?= date('d/m/Y', strtotime($l['data'])) ?></td>
-                            <td><?= htmlspecialchars($l['descricao']) ?></td>
-                            <td class="<?= $l['tipo'] === 'debito' ? 'debito' : 'credito' ?>">
-                                R$ <?= number_format($l['valor'], 2, ',', '.') ?>
-                            </td>
-                            <td><?= ucfirst($l['tipo']) ?></td>
+                            <td><?= htmlspecialchars($linha['data']) ?></td>
+                            <td><?= htmlspecialchars($linha['descricao']) ?></td>
+                            <td class="debito"><?= $linha['debito'] ? 'R$ ' . number_format($linha['debito'], 2, ',', '.') : '' ?></td>
+                            <td class="credito"><?= $linha['credito'] ? 'R$ ' . number_format($linha['credito'], 2, ',', '.') : '' ?></td>
+                            <td>R$ <?= number_format($linha['saldo'], 2, ',', '.') ?></td>
+                            <td><?= htmlspecialchars($linha['indice']) ?></td>
+                            <td><?= htmlspecialchars($linha['dias_uteis']) ?></td>
                         </tr>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
 
@@ -300,4 +303,5 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </div>
     </div>
 </body>
+
 </html>
