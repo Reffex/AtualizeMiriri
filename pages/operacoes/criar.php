@@ -277,7 +277,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <button type="submit">Criar operação</button>
             </div>
             <div class="register-link">
-                <p><a href="listar.php">Voltar para a lista</a></p>
+                <p><a href="listar.php">Voltar para operações</a></p>
             </div>
         </form>
     </div>
