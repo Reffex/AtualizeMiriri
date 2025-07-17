@@ -2,59 +2,61 @@
 require_once '../../includes/auto_check.php';
 require_once '../../includes/connect_app.php';
 
-
 $id = $_GET['id'] ?? null;
-if (!$id) {
+if (!$id || !is_numeric($id)) {
     echo "ID da operação inválido.";
     exit;
 }
 
-$op = $mysqli->query("
-        SELECT o.*, c.nome AS cliente_nome
-        FROM operacoes o
-        JOIN clientes c ON o.cliente_id = c.id
-        WHERE o.id = $id
-    ")->fetch_assoc();
+$stmt = $mysqli->prepare("SELECT o.*, c.nome AS cliente_nome FROM operacoes o JOIN clientes c ON o.cliente_id = c.id WHERE o.id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$op = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
-$lancamentos = $mysqli->query("
-        SELECT * FROM lancamentos
-        WHERE operacao_id = $id
-        ORDER BY data ASC
-    ");
+$stmt = $mysqli->prepare("SELECT * FROM lancamentos WHERE operacao_id = ? ORDER BY data ASC");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$lancamentos = $stmt->get_result();
+$stmt->close();
 
 require_once '../../includes/calcular_operacao.php';
-
 $valores = calcular_operacao($mysqli, $op, $lancamentos);
 
-// Cálculo do saldo
+// Garantindo que as chaves existem para evitar warnings
+$correcao = isset($valores['correcao']) ? $valores['correcao'] : 0.0;
+$juros = isset($valores['juros']) ? $valores['juros'] : 0.0;
+$multa = isset($valores['multa']) ? $valores['multa'] : 0.0;
+$honorarios = isset($valores['honorarios']) ? $valores['honorarios'] : 0.0;
+$saldo_atualizado = isset($valores['saldo_atualizado']) ? $valores['saldo_atualizado'] : 0.0;
+$movimentacao = isset($valores['movimentacao']) ? $valores['movimentacao'] : 0.0;
+
 $saldo = $op['valor_inicial'];
 $lancamentos->data_seek(0);
 while ($l = $lancamentos->fetch_assoc()) {
-    if ($l['tipo'] === 'credito') {
-        $saldo += $l['valor'];
-    } else {
-        $saldo -= $l['valor'];
-    }
+    $saldo += ($l['tipo'] === 'credito') ? $l['valor'] : -$l['valor'];
 }
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $data = $_POST['data'];
-    $descricao = $_POST['descricao'];
-    $valor = $_POST['valor'];
-    $tipo = $_POST['tipo'];
+    $data = $_POST['data'] ?? '';
+    $descricao = $_POST['descricao'] ?? '';
+    $valor = floatval($_POST['valor'] ?? 0);
+    $tipo = $_POST['tipo'] ?? '';
 
-    $stmt = $mysqli->prepare("INSERT INTO lancamentos (operacao_id, data, descricao, valor, tipo) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("issds", $id, $data, $descricao, $valor, $tipo);
-    if ($stmt->execute()) {
-        header("Location: detalhes.php?id=$id");
-        exit();
+    if ($data && $descricao && in_array($tipo, ['credito', 'debito'])) {
+        $stmt = $mysqli->prepare("INSERT INTO lancamentos (operacao_id, data, descricao, valor, tipo) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("issds", $id, $data, $descricao, $valor, $tipo);
+        if ($stmt->execute()) {
+            header("Location: detalhes.php?id=$id");
+            exit();
+        }
+        $stmt->close();
     }
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -84,30 +86,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         .section-title {
             text-align: center;
-        }
-
-        .tabela-lancamentos {
-            width: 100%;
-            margin: 20px auto;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-            background-color: rgba(255, 255, 255, 0.7);
-        }
-
-        .tabela-lancamentos th,
-        .tabela-lancamentos td {
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            text-align: center;
-        }
-
-        .tabela-lancamentos th {
-            background-color: rgba(0, 0, 0, 0.1);
-            font-weight: 600;
-        }
-
-        .tabela-lancamentos tr:nth-child(even) {
-            background-color: rgba(0, 0, 0, 0.05);
         }
 
         .tabela-extrato {
@@ -226,7 +204,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
             </form>
 
-            <table class="tabela-lancamentos">
+            <table class="tabela-extrato">
                 <thead>
                     <tr style="font-weight:bold; border-bottom: 2px solid #000;">
                         <th>DATA</th>
@@ -266,12 +244,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </thead>
                 <tbody>
                     <tr>
-                        <td>R$ <?= number_format($valores['movimentacao'], 2, ',', '.') ?></td>
-                        <td>R$ <?= number_format($valores['correcao'], 2, ',', '.') ?></td>
-                        <td>R$ <?= number_format($valores['juros'], 2, ',', '.') ?></td>
-                        <td>R$ <?= number_format($valores['multa'], 2, ',', '.') ?></td>
-                        <td>R$ <?= number_format($valores['honorarios'], 2, ',', '.') ?></td>
-                        <td>R$ <?= number_format($valores['saldo_atualizado'], 2, ',', '.') ?></td>
+                        <td>R$ <?= number_format($movimentacao, 2, ',', '.') ?></td>
+                        <td>R$ <?= number_format($correcao, 2, ',', '.') ?></td>
+                        <td>R$ <?= number_format($juros, 2, ',', '.') ?></td>
+                        <td>R$ <?= number_format($multa, 2, ',', '.') ?></td>
+                        <td>R$ <?= number_format($honorarios, 2, ',', '.') ?></td>
+                        <td>R$ <?= number_format($saldo_atualizado, 2, ',', '.') ?></td>
                     </tr>
                 </tbody>
             </table>
@@ -322,5 +300,4 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         </div>
     </div>
 </body>
-
 </html>
