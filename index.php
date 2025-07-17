@@ -113,7 +113,7 @@ require_once 'includes/auto_check.php';
             <a href="pages/calculos/indices.php" class="menu-link">
                 <div class="menu-box">
                     <div class="menu-icon"><i class='bx bx-search'></i></div>
-                    <strong>Consultar Indices</strong>
+                    <strong>Consultar Índices</strong>
                 </div>
             </a>
             <a href="logout.php" class="menu-link">
