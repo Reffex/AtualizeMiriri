@@ -69,112 +69,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 <head>
     <meta charset="UTF-8">
-    <title>Editar Operação</title>
     <link rel="stylesheet" href="../../assets/css/styles.css">
-    <style>
-        .form-box {
-            width: 100%;
-            max-width: 1000px;
-            margin: 20px auto;
-            padding: 30px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-            color: #000;
-        }
-
-        .form-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .form-item {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .form-item label {
-            font-weight: 500;
-            margin-bottom: 5px;
-        }
-
-        .form-item input,
-        .form-item select {
-            width: 100%;
-            padding: 10px;
-            border-radius: 40px;
-            background-color: rgba(255, 255, 255, 0.7);
-            color: #000;
-            border: 2px solid rgba(255, 255, 255, .2);
-        }
-
-        textarea {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 10px;
-            border: 2px solid rgba(255, 255, 255, .2);
-            background-color: rgba(255, 255, 255, 0.7);
-            color: #000;
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .button-group {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        button {
-            margin: 10px 5px;
-            padding: 10px 20px;
-            background-color: #fff;
-            border: none;
-            border-radius: 40px;
-            cursor: pointer;
-            font-weight: 600;
-            box-shadow: 0 0 10px rgba(0, 0, 0, .1);
-        }
-
-        button:hover {
-            background-color: transparent;
-            border: 2px solid rgba(255, 255, 255, .2);
-            color: #fff;
-            transition: 0.5s;
-        }
-
-        hr {
-            border: 1px solid rgba(255, 255, 255, .2);
-            margin: 30px 0;
-        }
-
-        @media (max-width: 768px) {
-            .form-box {
-                padding: 15px;
-            }
-
-            .form-row {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .form-item {
-                min-width: 100%;
-            }
-        }
-    </style>
 </head>
 
 <body>
-    <div class="form-box">
-        <h1 style="text-align:center; margin-bottom: 25px;">Editar Operação</h1>
+    <div class="form-box nova-operacao-box">
+        <h1 class="editar-operacao-titulo">Editar Operação</h1>
         <?php if (!empty($mensagem)): ?>
-            <p style="color:red; text-align:center;"><?= $mensagem ?></p>
+            <p class="mensagem-erro"><?= $mensagem ?></p>
         <?php endif; ?>
         <form method="POST">
 
