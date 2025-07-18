@@ -30,7 +30,7 @@ if ($operacoes === false) {
     <style>
         .form-box-wide {
             width: 100%;
-            max-width: 1100px;
+            max-width: 800px;
             margin: 20px auto;
             padding: 30px;
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -127,7 +127,7 @@ if ($operacoes === false) {
 
 <body>
     <div class="form-box-wide">
-        <h1 style="text-align:center;">Operações</h1>
+        <h1 style="text-align:center; color: white;">Operações</h1>
 
         <?php if (!empty($mensagem)): ?>
             <div id="alerta-msg" style="text-align:center; color:green; font-weight:bold;">
@@ -137,7 +137,7 @@ if ($operacoes === false) {
 
         <div style="text-align:center;">
             <a href="criar.php">
-                <button class="login" style="width: 350px;">Nova Operação</button>
+                <button class="login" style="width: 350px;">Criar Nova Operação</button>
             </a>
         </div>
 
@@ -146,12 +146,10 @@ if ($operacoes === false) {
                 <table class="tabela">
                     <thead>
                         <tr style="font-weight:bold; border-bottom: 2px solid #000;">
-                            <th>CLIENTE</th>
-                            <th>IDENTIFICADOR</th>
-                            <th>INDEXADOR</th>
-                            <th>PERIODICIDADE</th>
-                            <th>DATA</th>
-                            <th>AÇÕES</th>
+                            <th>Cliente</th>
+                            <th>Identificador</th>
+                            <th>Data</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -159,8 +157,6 @@ if ($operacoes === false) {
                             <tr>
                                 <td><?= htmlspecialchars($op['cliente_nome']) ?></td>
                                 <td><?= htmlspecialchars($op['identificador']) ?></td>
-                                <td><?= htmlspecialchars($op['indexador']) ?></td>
-                                <td><?= htmlspecialchars($op['periodicidade']) ?></td>
                                 <td><?= date('d/m/Y H:i', strtotime($op['data_criacao'])) ?></td>
                                 <td>
                                     <div class="action-icons">
