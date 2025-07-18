@@ -28,85 +28,26 @@ $resultado = $mysqli->query("SELECT * FROM indices ORDER BY data_referencia DESC
     <title>Consulta de Índices</title>
     <link rel="stylesheet" href="../../assets/css/styles.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <style>
-        .form-box-wide {
-            width: 100%;
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 30px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-            color: #000;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background-color: rgba(255, 255, 255, 0.7);
-        }
-
-        th,
-        td {
-            padding: 12px 15px;
-            text-align: center;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background-color: rgba(0, 0, 0, 0.1);
-            font-weight: 600;
-        }
-
-        tr:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-
-        .login {
-            margin: 20px 0;
-            padding: 10px 25px;
-        }
-
-        .tabela {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: rgba(255, 255, 255, 0.7);
-        }
-
-        .tabela th,
-        .tabela td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: center;
-        }
-
-        .tabela th {
-            background-color: rgba(0, 0, 0, 0.1);
-            font-weight: 600;
-        }
-    </style>
 </head>
 
 <body>
     <div class="form-box-wide">
-        <h1 style="text-align:center;">Consulta de Índices Econômicos</h1>
-        <?php if (!empty($mensagem)): ?>
+        <h1>Consulta de Índices Econômicos</h1>
 
-            <div style="text-align:center; color:green; margin: -35px 0;"><?= $mensagem ?></div>
+        <?php if (!empty($mensagem)): ?>
+            <div class="mensagem-atualizar"><?= $mensagem ?></div>
         <?php endif; ?>
 
-        <form method="POST" style="text-align:center;">
-            <button type="submit" name="atualizar" class="login" style="width: 250px; font-size: 14px;">Atualizar Índices</button>
+        <form method="POST">
+            <button type="submit" name="atualizar" class="login">Atualizar</button>
         </form>
 
         <table class="tabela">
             <thead>
-                <tr style="font-weight:bold; border-bottom: 2px solid #000;">
-                    <th>ÍNDICE</th>
-                    <th>DATA DE REFERÊNCIA</th>
-                    <th>VALOR(%)</th>
+                <tr>
+                    <th>Índice</th>
+                    <th>Data de referência</th>
+                    <th>Valor</th>
                 </tr>
             </thead>
             <tbody>
