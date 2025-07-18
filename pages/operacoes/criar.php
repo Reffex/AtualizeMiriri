@@ -6,35 +6,37 @@ $mensagem = '';
 $clientes = $mysqli->query("SELECT id, nome FROM clientes ORDER BY nome");
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $cliente_id = $_POST['cliente_id'];
+    // Casts para garantir os tipos corretos
+    $cliente_id = (int) $_POST['cliente_id'];
     $identificador = $_POST['identificador'];
     $indexador = $_POST['indexador'];
     $periodicidade = $_POST['periodicidade'];
 
-    $atualizar_ate = $_POST['atualizar_ate'];
-    $atualizar_dia_debito = $_POST['atualizar_dia_debito'];
-    $atualizar_correcao_monetaria = $_POST['atualizar_correcao_monetaria'];
-    $atualizar_juros_nominais = $_POST['atualizar_juros_nominais'];
+    $atualizar_ate = $_POST['atualizar_ate']; // data string, ok
+    $atualizar_dia_debito = (int) $_POST['atualizar_dia_debito'];
+    $atualizar_correcao_monetaria = (float) $_POST['atualizar_correcao_monetaria'];
+    $atualizar_juros_nominais = (float) $_POST['atualizar_juros_nominais'];
 
-    $alterar_taxas_em = $_POST['alterar_taxas_em'];
-    $alterar_dia_debito = $_POST['alterar_dia_debito'];
-    $alterar_correcao_monetaria = $_POST['alterar_correcao_monetaria'];
-    $alterar_juros_nominais = $_POST['alterar_juros_nominais'];
+    $alterar_taxas_em = $_POST['alterar_taxas_em']; // data string, ok
+    $alterar_dia_debito = (int) $_POST['alterar_dia_debito'];
+    $alterar_correcao_monetaria = (float) $_POST['alterar_correcao_monetaria'];
+    $alterar_juros_nominais = (float) $_POST['alterar_juros_nominais'];
 
-    $valor_multa = $_POST['valor_multa'];
-    $valor_honorarios = $_POST['valor_honorarios'];
+    // Pode receber vazio, então trata para float 0.0 caso vazio
+    $valor_multa = $_POST['valor_multa'] !== '' ? (float) $_POST['valor_multa'] : 0.0;
+    $valor_honorarios = $_POST['valor_honorarios'] !== '' ? (float) $_POST['valor_honorarios'] : 0.0;
     $observacao = $_POST['observacao'];
 
     $stmt = $mysqli->prepare("INSERT INTO operacoes (
-            cliente_id, identificador, indexador, periodicidade,
-            atualizar_ate, atualizar_dia_debito, atualizar_correcao_monetaria, atualizar_juros_nominais,
-            alterar_taxas_em, alterar_dia_debito, alterar_correcao_monetaria, alterar_juros_nominais,
-            valor_multa, valor_honorarios, observacao
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        cliente_id, identificador, indexador, periodicidade,
+        atualizar_ate, atualizar_dia_debito, atualizar_correcao_monetaria, atualizar_juros_nominais,
+        alterar_taxas_em, alterar_dia_debito, alterar_correcao_monetaria, alterar_juros_nominais,
+        valor_multa, valor_honorarios, observacao
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     if ($stmt) {
         $stmt->bind_param(
-            "isssdsidddddddd",
+            "isssiiddsiddddds",
             $cliente_id,
             $identificador,
             $indexador,
@@ -70,110 +72,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="../../assets/css/styles.css">
-    <style>
-        .form-box {
-            width: 100%;
-            max-width: 1000px;
-            margin: 20px auto;
-            padding: 30px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-            color: #000;
-        }
-
-        .form-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .form-item {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .form-item label {
-            font-weight: 500;
-            margin-bottom: 5px;
-        }
-
-        .form-item input,
-        .form-item select {
-            width: 100%;
-            padding: 10px;
-            border-radius: 40px;
-            background-color: rgba(255, 255, 255, 0.7);
-            color: #333;
-            border: 2px solid rgba(255, 255, 255, .2);
-        }
-
-        textarea {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 10px;
-            border: 2px solid rgba(255, 255, 255, .2);
-            background-color: rgba(255, 255, 255, 0.7);
-            color: #000;
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .button-group {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        button {
-            margin: 10px 5px;
-            padding: 10px 20px;
-            background-color: #fff;
-            border: none;
-            border-radius: 40px;
-            cursor: pointer;
-            font-weight: 600;
-            box-shadow: 0 0 10px rgba(0, 0, 0, .1);
-        }
-
-        button:hover {
-            background-color: transparent;
-            border: 2px solid rgba(255, 255, 255, .2);
-            color: #fff;
-            transition: 0.5s;
-        }
-
-        hr {
-            border: 1px solid rgba(255, 255, 255, .2);
-            margin: 30px 0;
-        }
-
-        @media (max-width: 768px) {
-            .form-box {
-                padding: 15px;
-            }
-
-            .form-row {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            .form-item {
-                min-width: 100%;
-            }
-        }
-    </style>
 </head>
 
 <body>
-    <div class="form-box">
-        <h1 style="text-align:center; margin-bottom: 10px;">Nova Operação</h1>
+    <div class="form-box nova-operacao-box">
+        <h1 class="nova-operacao-titulo">Nova Operação</h1>
         <?php if (!empty($mensagem)): ?>
-            <p style="color:red; text-align:center;"><?= $mensagem ?></p>
+            <p class="mensagem-erro"><?= $mensagem ?></p>
         <?php endif; ?>
         <form method="POST">
 
@@ -227,11 +132,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
                 <div class="form-item">
                     <label for="atualizar_correcao_monetaria">Correção monetária(%):</label>
-                    <input type="number" step="0.001" name="atualizar_correcao_monetaria" value="100.000" required>
+                    <input type="number" step="0.001" name="atualizar_correcao_monetaria" required>
                 </div>
                 <div class="form-item">
                     <label for="atualizar_juros_nominais">Juros nominais(%):</label>
-                    <input type="number" step="0.001" name="atualizar_juros_nominais" value="12.000" required>
+                    <input type="number" step="0.001" name="atualizar_juros_nominais" required>
                 </div>
             </div>
 
@@ -247,11 +152,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
                 <div class="form-item">
                     <label for="alterar_correcao_monetaria">Correção monetária(%):</label>
-                    <input type="number" step="0.001" name="alterar_correcao_monetaria" value="100.000" required>
+                    <input type="number" step="0.001" name="alterar_correcao_monetaria" required>
                 </div>
                 <div class="form-item">
                     <label for="alterar_juros_nominais">Juros nominais(%):</label>
-                    <input type="number" step="0.001" name="alterar_juros_nominais" value="12.000" required>
+                    <input type="number" step="0.001" name="alterar_juros_nominais" required>
                 </div>
             </div>
 
