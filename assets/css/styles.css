@@ -12,7 +12,7 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: url('../img/Miriri.jpg');
+    background: url('../img/Frame\ 3.jpg');
     background-size: cover;
     background-position: center;
 }
@@ -263,9 +263,9 @@ form {
 
 /* Estilos para a página de clientes */
 
-.form-box-wide {
+.form-box-wide-detalhes {
     width: 100%;
-    max-width: 800px;
+    max-width: 1100px;
     margin: 20px auto;
     padding: 30px;
     border: 2px solid rgba(255, 255, 255, 0.3);
@@ -287,13 +287,30 @@ h1.clientes-titulo {
 
 #alerta-msg {
     text-align: center;
-    color: green;
+    color: #AFCA48;
     font-weight: bold;
 }
 
 .botao-centralizado {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.botao-centralizado button.botao-criar {
+    width: 350px;
+    max-width: 100%;
+}
+
+.botao-filtrar {
     text-align: center;
     margin-bottom: 20px;
+}
+
+.botao-filtrar button {
+    padding: 6px 12px;
+    font-size: 15px;
+    max-width: 50px;
 }
 
 .botao-criar {
@@ -404,7 +421,7 @@ h1.clientes-titulo {
 
 .form-item label {
     font-weight: 500;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 
 .form-item input,
@@ -482,7 +499,6 @@ body.listar-operacoes-page {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: url('../img/Frame\ 3.jpg');
     background-size: cover;
     background-position: center;
     padding: 40px;
@@ -694,7 +710,7 @@ body.listar-operacoes-page {
 .listar-operacoes table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px;
+    margin-top: 0px;
     background-color: rgba(255, 255, 255, 0.7);
 }
 
@@ -1040,4 +1056,67 @@ input[type="date"] {
     padding: 8px;
     border-radius: 4px;
     border: 1px solid #ccc;
+}
+
+.input-busca {
+    width: 300px;               
+    height: 50px;              
+    background-color: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 40px;
+    outline: none;
+    font-size: 16px;
+    color: #fff;
+    padding: 0 45px 0 20px;   
+    transition: border-color 0.3s ease;
+}
+
+.input-busca::placeholder {
+    color: #ffffff;
+}
+
+.input-busca:focus {
+    border-color: rgba(255, 255, 255, 0.2);   
+    background-color: transparent;
+}
+
+.botao-filtrar {
+    display: flex;            
+    justify-content: center;  
+    margin-bottom: 20px;
+}
+
+.botao-filtrar form {
+    display: flex;
+    gap: 5px;
+    align-items: center;     
+}
+
+.input-busca {
+    flex: 1;
+    min-width: 150px;
+    max-width: 300px;
+}
+
+.botao-filtrar button.login {
+    width: 50px;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+}
+
+table {
+    margin-bottom: 40px;
+}
+
+.form-box-wide,
+.nova-operacao-box,
+.operacoes-container {
+    margin-bottom: 60px;
+}
+
+.form-item:last-child {
+    margin-bottom: 20px;
 }
