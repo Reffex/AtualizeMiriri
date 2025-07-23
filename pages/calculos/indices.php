@@ -6,18 +6,21 @@ require_once '../../includes/funcoes_indices.php';
 $mensagem = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar'])) {
-    $indices = [
-        'IPCA' => 10844,
-        'CDI'  => 4390,
-        'SELIC' => 1178
-    ];
-
-    foreach ($indices as $nome => $codigo) {
-        $mensagem .= atualizar_indices($mysqli, $nome, $codigo) . "<br>";
-    }
+    $mensagem = atualizar_indices($mysqli);
 }
 
-$resultado = $mysqli->query("SELECT * FROM indices ORDER BY data_referencia DESC");
+$termo = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
+
+if (!empty($termo)) {
+    $stmt = $mysqli->prepare("SELECT * FROM indices WHERE nome LIKE ? ORDER BY data_referencia DESC");
+    $like = '%' . $termo . '%';
+    $stmt->bind_param("s", $like);
+    $stmt->execute();
+    $resultado = $stmt->get_result();
+    $stmt->close();
+} else {
+    $resultado = $mysqli->query("SELECT * FROM indices ORDER BY data_referencia DESC");
+}
 ?>
 
 <!DOCTYPE html>
@@ -28,26 +31,45 @@ $resultado = $mysqli->query("SELECT * FROM indices ORDER BY data_referencia DESC
     <title>Consulta de Índices</title>
     <link rel="stylesheet" href="../../assets/css/styles.css">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <script>
+        setTimeout(function() {
+            const msg = document.getElementById('alerta-msg');
+            if (msg) {
+                msg.style.transition = 'opacity 1s';
+                msg.style.opacity = 0;
+                setTimeout(() => msg.remove(), 1000);
+            }
+        }, 3000);
+    </script>
 </head>
 
 <body>
     <div class="form-box-wide">
-        <h1>Consulta de Índices Econômicos</h1>
+        <h1>Índices Econômicos</h1>
 
         <?php if (!empty($mensagem)): ?>
-            <div class="mensagem-atualizar"><?= $mensagem ?></div>
+            <div id="alerta-msg" class="alerta-msg"><?= $mensagem ?></div>
         <?php endif; ?>
 
         <form method="POST">
-            <button type="submit" name="atualizar" class="login">Atualizar</button>
+            <button type="submit" name="atualizar" class="login botao-criar">Atualizar Índices</button>
         </form>
+
+        <div class="botao-filtrar">
+            <form method="GET" action="" style="display: flex; gap: 5px;">
+                <input type="text" name="buscar" placeholder="Buscar índice..." value="<?= htmlspecialchars($termo) ?>" class="input-busca">
+                <button type="submit" class="login" title="Filtrar">
+                    <i class='bx bx-search'></i>
+                </button>
+            </form>
+        </div>
 
         <table class="tabela">
             <thead>
                 <tr>
                     <th>Índice</th>
                     <th>Data de referência</th>
-                    <th>Valor</th>
+                    <th>Valor (%)</th>
                 </tr>
             </thead>
             <tbody>
@@ -56,12 +78,14 @@ $resultado = $mysqli->query("SELECT * FROM indices ORDER BY data_referencia DESC
                         <tr>
                             <td><?= htmlspecialchars($row['nome']) ?></td>
                             <td><?= date('m/Y', strtotime($row['data_referencia'])) ?></td>
-                            <td><?= number_format($row['valor'], 4, ',', '.') ?></td>
+                            <td><?= number_format($row['valor'], 2, ',', '.') ?>%</td>
                         </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="3">Nenhum índice encontrado.</td>
+                        <td colspan="3">
+                            <?= empty($termo) ? 'Nenhum índice encontrado.' : 'Nenhum índice correspondente à busca.' ?>
+                        </td>
                     </tr>
                 <?php endif; ?>
             </tbody>
