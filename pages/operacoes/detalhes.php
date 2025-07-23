@@ -95,174 +95,18 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="../../assets/css/styles.css">
-    <style>
-        .form-box-wide {
-            width: 100%;
-            max-width: 1000px;
-            margin: 20px auto;
-            padding: 30px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-            color: #000;
-        }
-
-        .info-header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .section-title {
-            text-align: center;
-        }
-
-        .tabela-extrato {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 30px;
-            margin-bottom: 30px;
-            background-color: rgba(255, 255, 255, 0.7);
-        }
-
-        .tabela-extrato th,
-        .tabela-extrato td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: center;
-        }
-
-        .tabela-extrato th {
-            background-color: rgba(0, 0, 0, 0.1);
-            font-weight: 600;
-        }
-
-        .form-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: -10px;
-        }
-
-        .input-box {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .button-group {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 10px;
-            margin-bottom: 40px;
-        }
-
-        .debito {
-            color: red;
-        }
-
-        .credito {
-            color: green;
-        }
-
-        /* Estilos para edição */
-        .editable {
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .editable:hover {
-            background-color: rgba(0, 0, 0, 0.1);
-        }
-
-        .editable-select {
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .editable-select:hover {
-            background-color: rgba(0, 0, 0, 0.1);
-        }
-
-        /* Modal de edição */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            width: 400px;
-        }
-
-        .modal-actions {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-
-        /* Estilo dos ícones */
-        .action-icons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .action-icons i {
-            font-size: 20px;
-            color: #333;
-            transition: 0.3s;
-        }
-
-        .action-icons i:hover {
-            color: #AEF0FF;
-        }
-
-        .action-icons i.bx-trash:hover {
-            color: red;
-        }
-
-        /* Inputs na tabela */
-        .table-input {
-            width: 100%;
-            border: none;
-            background: transparent;
-            text-align: center;
-        }
-
-        .table-select {
-            width: 100%;
-            border: none;
-            background: transparent;
-            text-align: center;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-        }
-    </style>
+    <title>Detalhes da Operação</title>
 </head>
 
-<body>
-    <div class="form-box-wide">
+<body class="detalhes-operacao">
+    <div class="form-box-wide detalhes-operacao">
         <div class="info-header">
-            <h1 class="section-title" style="color: white;">Lançamentos</h1>
+            <h1 class="section-title">Lançamentos</h1>
 
             <!-- Tabela de Lançamentos Editável -->
             <table class="tabela-extrato">
                 <thead>
-                    <tr style="font-weight:bold; border-bottom: 2px solid #000;">
+                    <tr>
                         <th>Data</th>
                         <th>Descrição</th>
                         <th>Valor</th>
@@ -291,10 +135,8 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                                 </select>
                             </td>
                             <td>
-                                <button type="submit" style="background: none; border: none; cursor: pointer;">
-                                    <i class='bx bx-save' style="font-size: 20px; color: #333; transition: 0.3s;"
-                                        onmouseover="this.style.color='#AEF0FF'"
-                                        onmouseout="this.style.color='#333'"></i>
+                                <button type="submit" class="btn-icon">
+                                    <i class='bx bx-save'></i>
                                 </button>
                             </td>
                         </form>
@@ -314,12 +156,10 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                             </td>
                             <td>
                                 <div class="action-icons">
-                                    <form method="POST" style="display: inline;">
+                                    <form method="POST" class="form-inline">
                                         <input type="hidden" name="lancamento_id" value="<?= $l['id'] ?>">
-                                        <button type="submit" name="excluir_lancamento" style="background: none; border: none; cursor: pointer;">
-                                            <i class='bx bx-trash' style="font-size: 20px; color: #333; transition: 0.3s;"
-                                                onmouseover="this.style.color='red'"
-                                                onmouseout="this.style.color='#333'"></i>
+                                        <button type="submit" name="excluir_lancamento" class="btn-icon">
+                                            <i class='bx bx-trash'></i>
                                         </button>
                                     </form>
                                 </div>
@@ -329,12 +169,12 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                 </tbody>
             </table>
 
-            <h1 class="section-title" style="color: white;">Extrato do Cálculo</h1>
+            <h1 class="section-title">Extrato do Cálculo</h1>
 
             <!-- Tabela de Resumo do Extrato -->
             <table class="tabela-extrato">
                 <thead>
-                    <tr style="font-weight:bold; border-bottom: 2px solid #000;">
+                    <tr>
                         <th>Movimentação<br>acumulada no<br>período</th>
                         <th>Correção<br>monetária<br>acumulada no<br>período</th>
                         <th>Juros<br>acumulados<br>no período</th>
@@ -358,7 +198,7 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
             <!-- Tabela de Extrato Detalhado -->
             <table class="tabela-extrato">
                 <thead>
-                    <tr style="font-weight:bold; border-bottom: 2px solid #000;">
+                    <tr>
                         <th>Data</th>
                         <th>Descrição</th>
                         <th>Débito</th>
@@ -389,7 +229,6 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
         </div>
     </div>
 
-
     <!-- Modal de edição -->
     <div id="editModal" class="modal">
         <div class="modal-content">
@@ -398,33 +237,31 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                 <input type="hidden" name="editar_lancamento" value="1">
                 <input type="hidden" name="lancamento_id" id="editLancamentoId">
 
-                <div style="margin-bottom: 15px;">
+                <div class="input-box">
                     <label>Data</label>
-                    <input type="date" name="data" id="editData" required style="width: 100%; padding: 8px;">
+                    <input type="date" name="data" id="editData" required>
                 </div>
 
-                <div style="margin-bottom: 15px;">
+                <div class="input-box">
                     <label>Descrição</label>
-                    <input type="text" name="descricao" id="editDescricao" required style="width: 100%; padding: 8px;">
+                    <input type="text" name="descricao" id="editDescricao" required>
                 </div>
 
-                <div style="margin-bottom: 15px;">
+                <div class="input-box">
                     <label>Valor</label>
-                    <input type="text" name="valor" id="editValor" placeholder="0,00" required
-                        style="width: 100%; padding: 8px;" oninput="formatarValor(this)">
+                    <input type="text" name="valor" id="editValor" placeholder="0,00" required oninput="formatarValor(this)">
                 </div>
 
-                <div style="margin-bottom: 15px;">
+                <div class="input-box">
                     <label>Tipo</label>
-                    <select name="tipo" id="editTipo" required style="width: 100%; padding: 8px;">
+                    <select name="tipo" id="editTipo" required>
                         <option value="debito">Débito</option>
                         <option value="credito">Crédito</option>
                     </select>
                 </div>
 
                 <div class="modal-actions">
-                    <button type="button" onclick="document.getElementById('editModal').style.display = 'none'"
-                        class="modal-button modal-cancel">Cancelar</button>
+                    <button type="button" onclick="document.getElementById('editModal').style.display = 'none'" class="modal-button modal-cancel">Cancelar</button>
                     <button type="submit" class="modal-button modal-save">Salvar</button>
                 </div>
             </form>
