@@ -12,7 +12,7 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: url('../img/Frame\ 3.jpg');
+    background: url('../img/Miriri.jpg');
     background-size: cover;
     background-position: center;
 }
@@ -599,6 +599,202 @@ body.listar-operacoes-page {
     }
 
     .action-icons {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+
+/* ===== Estilos específicos para a página excluir.php ===== */
+
+.form-box-wide.excluir-page {
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 30px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    color: #000;
+}
+
+.excluir-page table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+.excluir-page th,
+.excluir-page td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.excluir-page th {
+    background-color: rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+}
+
+.excluir-page tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.excluir-page .login {
+    padding: 10px 25px;
+    margin: 10px 0;
+}
+
+.excluir-page .tabela {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+.excluir-page .tabela th,
+.excluir-page .tabela td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+.excluir-page .tabela th {
+    background-color: rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+}
+
+/* Estilos responsivos para excluir.php */
+@media (max-width: 768px) {
+    .excluir-page .form-box-wide {
+        padding: 15px;
+    }
+
+    .excluir-page th,
+    .excluir-page td {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+}
+
+/* ===== Estilos específicos para a página listar operações ===== */
+
+.form-box-wide.listar-operacoes {
+    width: 100%;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 30px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    backdrop-filter: blur(20px);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    color: #000;
+}
+
+.listar-operacoes table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+.listar-operacoes th,
+.listar-operacoes td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.listar-operacoes th {
+    background-color: rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+}
+
+.listar-operacoes tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.listar-operacoes .login {
+    padding: 10px 25px;
+    margin: 10px 0;
+}
+
+.listar-operacoes .action-icons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.listar-operacoes .action-icons a {
+    text-decoration: none;
+}
+
+.listar-operacoes .tabela {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+.listar-operacoes .tabela th,
+.listar-operacoes .tabela td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+.listar-operacoes .tabela th {
+    background-color: rgba(0, 0, 0, 0.1);
+    font-weight: 600;
+}
+
+/* Estilos inline que podem ser movidos para classes */
+.listar-operacoes .titulo-centralizado {
+    text-align: center;
+    color: white;
+}
+
+.listar-operacoes .alerta-msg {
+    text-align: center;
+    color: green;
+    font-weight: bold;
+}
+
+.listar-operacoes .botao-largo {
+    width: 350px;
+}
+
+.listar-operacoes .linha-destaque {
+    font-weight: bold;
+    border-bottom: 2px solid #000;
+}
+
+.listar-operacoes .icone-acao {
+    font-size: 20px;
+    color: #333;
+    transition: 0.3s;
+}
+
+.listar-operacoes .icone-acao:hover {
+    color: #AEF0FF;
+}
+
+.listar-operacoes .icone-excluir:hover {
+    color: red !important;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .listar-operacoes .form-box-wide {
+        padding: 15px;
+    }
+
+    .listar-operacoes th,
+    .listar-operacoes td {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+
+    .listar-operacoes .action-icons {
         flex-direction: column;
         gap: 5px;
     }
