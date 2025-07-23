@@ -13,77 +13,6 @@ $clientes = $mysqli->query("SELECT * FROM clientes ORDER BY id DESC");
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="../../assets/css/styles.css">
-    <style>
-        .form-box-wide {
-            width: 100%;
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 30px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-            color: #000;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            background-color: rgba(255, 255, 255, 0.7);
-        }
-
-        th,
-        td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background-color: rgba(0, 0, 0, 0.1);
-            font-weight: 600;
-        }
-
-        tr:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-        }
-
-        .login {
-            padding: 10px 25px;
-            margin: 10px 0;
-        }
-
-        @media (max-width: 768px) {
-            .form-box-wide {
-                padding: 15px;
-            }
-
-            th,
-            td {
-                padding: 8px 10px;
-                font-size: 14px;
-            }
-        }
-
-        .tabela {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: rgba(255, 255, 255, 0.7);
-        }
-
-        .tabela th,
-        .tabela td {
-            padding: 10px;
-            border: 1px solid #ddd;
-            text-align: center;
-        }
-
-        .tabela th {
-            background-color: rgba(0, 0, 0, 0.1);
-            font-weight: 600;
-        }
-    </style>
     <script>
         setTimeout(function() {
             const msg = document.getElementById('alerta-msg');
@@ -98,7 +27,7 @@ $clientes = $mysqli->query("SELECT * FROM clientes ORDER BY id DESC");
 
 <body>
     <div class="form-box-wide">
-        <div class="form-box">
+        <div class="form-box-wide excluir-page">
             <h1 style="text-align:center;">Listar Clientes</h1>
 
             <?php if (isset($_GET['sucesso'])): ?>
