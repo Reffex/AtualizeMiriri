@@ -2,7 +2,18 @@
 require_once '../../includes/auto_check.php';
 require_once '../../includes/connect_app.php';
 
-$clientes = $mysqli->query("SELECT * FROM clientes ORDER BY id DESC");
+$termo = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
+
+if (!empty($termo)) {
+    $stmt = $mysqli->prepare("SELECT * FROM clientes WHERE nome LIKE ? OR documento LIKE ? ORDER BY id DESC");
+    $like = '%' . $termo . '%';
+    $stmt->bind_param("ss", $like, $like);
+    $stmt->execute();
+    $clientes = $stmt->get_result();
+    $stmt->close();
+} else {
+    $clientes = $mysqli->query("SELECT * FROM clientes ORDER BY id DESC");
+}
 ?>
 
 <!DOCTYPE html>
@@ -33,17 +44,26 @@ $clientes = $mysqli->query("SELECT * FROM clientes ORDER BY id DESC");
             <?php if (isset($_GET['sucesso'])): ?>
                 <div id="alerta-msg">
                     <?php if ($_GET['sucesso'] == 1): ?>
-                        Cliente cadastrado com sucesso!
+                        Cliente cadastrado!
                     <?php elseif ($_GET['sucesso'] == 3): ?>
-                        Cliente excluído com sucesso!
+                        Cliente excluído!
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
 
-            <div class="botao-centralizado">
+            <div class="botao-centralizado" style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <a href="cadastrar.php">
-                    <button class="login botao-criar">Criar Novo Cliente</button>
+                    <button class="login botao-criar">Criar Cliente</button>
                 </a>
+            </div>
+
+            <div class="botao-filtrar" style="margin-top: -20px;">
+                <form method="GET" action="" style="display: flex; gap: 5px;">
+                    <input type="text" name="buscar" placeholder="Buscar cliente..." value="<?= htmlspecialchars($termo) ?>" class="input-busca">
+                    <button type="submit" class="login" title="Filtrar">
+                        <i class='bx bx-search'></i>
+                    </button>
+                </form>
             </div>
 
             <table class="tabela">
@@ -72,7 +92,7 @@ $clientes = $mysqli->query("SELECT * FROM clientes ORDER BY id DESC");
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="3" class="text-left" style="padding:20px;">Nenhum cliente cadastrado.</td>
+                            <td colspan="3" class="text-center" style="padding:20px;">Nenhum cliente encontrado.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
