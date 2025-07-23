@@ -95,13 +95,14 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="../../assets/css/styles.css">
-    <title>Detalhes da Operação</title>
+    <title>Atualize Miriri</title>
+
 </head>
 
-<body class="detalhes-operacao">
-    <div class="form-box-wide detalhes-operacao">
+<body>
+    <div class="form-box-wide-detalhes">
         <div class="info-header">
-            <h1 class="section-title">Lançamentos</h1>
+            <h1 class="section-title" style="color: white;">Lançamentos</h1>
 
             <!-- Tabela de Lançamentos Editável -->
             <table class="tabela-extrato">
@@ -135,8 +136,10 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                                 </select>
                             </td>
                             <td>
-                                <button type="submit" class="btn-icon">
-                                    <i class='bx bx-save'></i>
+                                <button type="submit" style="background: none; border: none; cursor: pointer;">
+                                    <i class='bx bx-save' style="font-size: 20px; color: #333; transition: 0.3s;"
+                                        onmouseover="this.style.color='#AEF0FF'"
+                                        onmouseout="this.style.color='#333'"></i>
                                 </button>
                             </td>
                         </form>
@@ -156,10 +159,12 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                             </td>
                             <td>
                                 <div class="action-icons">
-                                    <form method="POST" class="form-inline">
+                                    <form method="POST" style="display: inline;">
                                         <input type="hidden" name="lancamento_id" value="<?= $l['id'] ?>">
-                                        <button type="submit" name="excluir_lancamento" class="btn-icon">
-                                            <i class='bx bx-trash'></i>
+                                        <button type="submit" name="excluir_lancamento" style="background: none; border: none; cursor: pointer;">
+                                            <i class='bx bx-trash' style="font-size: 20px; color: #333; transition: 0.3s;"
+                                                onmouseover="this.style.color='red'"
+                                                onmouseout="this.style.color='#333'"></i>
                                         </button>
                                     </form>
                                 </div>
@@ -169,7 +174,7 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                 </tbody>
             </table>
 
-            <h1 class="section-title">Extrato do Cálculo</h1>
+            <h1 class="section-title" style="color: white;">Extrato do Cálculo</h1>
 
             <!-- Tabela de Resumo do Extrato -->
             <table class="tabela-extrato">
@@ -222,12 +227,13 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                     <?php endforeach; ?>
                 </tbody>
             </table>
-
+            <br>
             <div class="register-link">
                 <p><a href="../../pages/operacoes/listar.php">Voltar para operações</a></p>
             </div>
         </div>
     </div>
+
 
     <!-- Modal de edição -->
     <div id="editModal" class="modal">
@@ -237,31 +243,33 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                 <input type="hidden" name="editar_lancamento" value="1">
                 <input type="hidden" name="lancamento_id" id="editLancamentoId">
 
-                <div class="input-box">
+                <div style="margin-bottom: 15px;">
                     <label>Data</label>
-                    <input type="date" name="data" id="editData" required>
+                    <input type="date" name="data" id="editData" required style="width: 100%; padding: 8px;">
                 </div>
 
-                <div class="input-box">
+                <div style="margin-bottom: 15px;">
                     <label>Descrição</label>
-                    <input type="text" name="descricao" id="editDescricao" required>
+                    <input type="text" name="descricao" id="editDescricao" required style="width: 100%; padding: 8px;">
                 </div>
 
-                <div class="input-box">
+                <div style="margin-bottom: 15px;">
                     <label>Valor</label>
-                    <input type="text" name="valor" id="editValor" placeholder="0,00" required oninput="formatarValor(this)">
+                    <input type="text" name="valor" id="editValor" placeholder="0,00" required
+                        style="width: 100%; padding: 8px;" oninput="formatarValor(this)">
                 </div>
 
-                <div class="input-box">
+                <div style="margin-bottom: 15px;">
                     <label>Tipo</label>
-                    <select name="tipo" id="editTipo" required>
+                    <select name="tipo" id="editTipo" required style="width: 100%; padding: 8px;">
                         <option value="debito">Débito</option>
                         <option value="credito">Crédito</option>
                     </select>
                 </div>
 
                 <div class="modal-actions">
-                    <button type="button" onclick="document.getElementById('editModal').style.display = 'none'" class="modal-button modal-cancel">Cancelar</button>
+                    <button type="button" onclick="document.getElementById('editModal').style.display = 'none'"
+                        class="modal-button modal-cancel">Cancelar</button>
                     <button type="submit" class="modal-button modal-save">Salvar</button>
                 </div>
             </form>
