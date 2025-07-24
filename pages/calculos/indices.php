@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 require_once '../../includes/auto_check.php';
 require_once '../../includes/connect_app.php';
 require_once '../../includes/funcoes_indices.php';
@@ -77,8 +80,8 @@ if (!empty($termo)) {
                     <?php while ($row = $resultado->fetch_assoc()): ?>
                         <tr>
                             <td><?= htmlspecialchars($row['nome']) ?></td>
-                            <td><?= date('m/Y', strtotime($row['data_referencia'])) ?></td>
-                            <td><?= number_format($row['valor'], 2, ',', '.') ?>%</td>
+                            <td><?= date('d/m/Y', strtotime($row['data_referencia'])) ?></td>
+                            <td><?= number_format($row['valor'], 4, ',', '.') ?>%</td>
                         </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
