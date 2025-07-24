@@ -2,6 +2,14 @@
 require_once '../../includes/auto_check.php';
 require_once '../../includes/connect_app.php';
 
+function normalizarNumero($valor)
+{
+    if (is_string($valor)) {
+        $valor = str_replace(['.', ','], ['', '.'], $valor);
+    }
+    return $valor;
+}
+
 $mensagem = '';
 $clientes = $mysqli->query("SELECT id, nome, documento FROM clientes ORDER BY nome");
 
@@ -11,19 +19,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $identificador = trim($_POST['identificador']);
         $indexador = $_POST['indexador'];
         $periodicidade = $_POST['periodicidade'];
+        $data_criacao = date('Y-m-d');
 
         $atualizar_ate = $_POST['atualizar_ate'];
         $atualizar_dia_debito = (int) $_POST['atualizar_dia_debito'];
-        $atualizar_correcao_monetaria = (float) $_POST['atualizar_correcao_monetaria'];
-        $atualizar_juros_nominais = (float) $_POST['atualizar_juros_nominais'];
+        $atualizar_correcao_monetaria = normalizarNumero($_POST['atualizar_correcao_monetaria']);
+        $atualizar_juros_nominais = normalizarNumero($_POST['atualizar_juros_nominais']);
 
         $alterar_taxas_em = $_POST['alterar_taxas_em'];
         $alterar_dia_debito = (int) $_POST['alterar_dia_debito'];
-        $alterar_correcao_monetaria = (float) $_POST['alterar_correcao_monetaria'];
-        $alterar_juros_nominais = (float) $_POST['alterar_juros_nominais'];
+        $alterar_correcao_monetaria = normalizarNumero($_POST['alterar_correcao_monetaria']);
+        $alterar_juros_nominais = normalizarNumero($_POST['alterar_juros_nominais']);
 
-        $valor_multa = $_POST['valor_multa'] !== '' ? (float) $_POST['valor_multa'] : 0.0;
-        $valor_honorarios = $_POST['valor_honorarios'] !== '' ? (float) $_POST['valor_honorarios'] : 0.0;
+        $valor_multa = ($_POST['valor_multa'] !== '') ? normalizarNumero($_POST['valor_multa']) : 0.0;
+        $valor_honorarios = ($_POST['valor_honorarios'] !== '') ? normalizarNumero($_POST['valor_honorarios']) : 0.0;
         $observacao = trim($_POST['observacao']);
 
         if (strtotime($atualizar_ate) === false || strtotime($alterar_taxas_em) === false) {
@@ -31,18 +40,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
 
         $stmt = $mysqli->prepare("INSERT INTO operacoes (
-            cliente_id, identificador, indexador, periodicidade,
-            atualizar_ate, atualizar_dia_debito, atualizar_correcao_monetaria, atualizar_juros_nominais,
-            alterar_taxas_em, alterar_dia_debito, alterar_correcao_monetaria, alterar_juros_nominais,
-            valor_multa, valor_honorarios, observacao
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    cliente_id, identificador, indexador, periodicidade,
+    atualizar_ate, atualizar_dia_debito, atualizar_correcao_monetaria, atualizar_juros_nominais,
+    alterar_taxas_em, alterar_dia_debito, alterar_correcao_monetaria, alterar_juros_nominais,
+    valor_multa, valor_honorarios, observacao, data_criacao
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
         if (!$stmt) {
             throw new Exception("Erro na preparação da query: " . $mysqli->error);
         }
 
         $stmt->bind_param(
-            "issssiiddsiddds",
+            "isddssiddsidddss",
             $cliente_id,
             $identificador,
             $indexador,
@@ -57,7 +66,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $alterar_juros_nominais,
             $valor_multa,
             $valor_honorarios,
-            $observacao
+            $observacao,
+            $data_criacao
         );
 
         if ($stmt->execute()) {
@@ -144,11 +154,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
                 <div class="form-item">
                     <label for="atualizar_correcao_monetaria">Correção monetária (%):</label>
-                    <input type="number" step="0.001" name="atualizar_correcao_monetaria" id="atualizar_correcao_monetaria" value="100" required>
+                    <input type="text" step="0.001" name="atualizar_correcao_monetaria" id="atualizar_correcao_monetaria" value="100,000" pattern="^[0-9]+([,\.][0-9]+)?$" required>
                 </div>
                 <div class="form-item">
                     <label for="atualizar_juros_nominais">Juros nominais (%):</label>
-                    <input type="number" step="0.001" name="atualizar_juros_nominais" id="atualizar_juros_nominais" value="12" required>
+                    <input type="text" step="0.001" name="atualizar_juros_nominais" id="atualizar_juros_nominais" value="12,000" pattern="^[0-9]+([,\.][0-9]+)?$" required>
                 </div>
             </div>
 
@@ -164,11 +174,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
                 <div class="form-item">
                     <label for="alterar_correcao_monetaria">Correção monetária (%):</label>
-                    <input type="number" step="0.001" name="alterar_correcao_monetaria" id="alterar_correcao_monetaria" value="100" required>
+                    <input type="text" step="0.001" name="alterar_correcao_monetaria" id="alterar_correcao_monetaria" value="100,000" pattern="^[0-9]+([,\.][0-9]+)?$" required>
                 </div>
                 <div class="form-item">
                     <label for="alterar_juros_nominais">Juros nominais (%):</label>
-                    <input type="number" step="0.001" name="alterar_juros_nominais" id="alterar_juros_nominais" value="12" required>
+                    <input type="text" step="0.001" name="alterar_juros_nominais" id="alterar_juros_nominais" value="12,000" pattern="^[0-9]+([,\.][0-9]+)?$" required>
                 </div>
             </div>
             <br><br>
@@ -177,11 +187,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <div class="form-row">
                 <div class="form-item">
                     <label for="valor_multa">Valor da multa (R$):</label>
-                    <input type="number" step="0.01" name="valor_multa" id="valor_multa" placeholder="Opcional">
+                    <input type="text" step="0.01" name="valor_multa" id="valor_multa" placeholder="0,00" pattern="^[0-9]+([,\.][0-9]+)?$">
                 </div>
                 <div class="form-item">
                     <label for="valor_honorarios">Valor dos honorários (R$):</label>
-                    <input type="number" step="0.01" name="valor_honorarios" id="valor_honorarios" placeholder="Opcional">
+                    <input type="text" step="0.01" name="valor_honorarios" id="valor_honorarios" placeholder="0,00" pattern="^[0-9]+([,\.][0-9]+)?$">
                 </div>
             </div>
 
@@ -217,6 +227,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             document.getElementById('alterar_taxas_em').value = `${anoFuturo}-${mesFuturo}-01`;
         });
     </script>
+
 </body>
 
 </html>
