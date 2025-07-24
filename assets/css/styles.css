@@ -106,7 +106,6 @@ body {
 }
 
 .register-link {
-    font-size: 14px;
     text-align: center;
     margin: 20px 0 15px;
 }
@@ -1059,15 +1058,15 @@ input[type="date"] {
 }
 
 .input-busca {
-    width: 300px;               
-    height: 50px;              
+    width: 300px;
+    height: 50px;
     background-color: transparent;
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 40px;
     outline: none;
     font-size: 16px;
     color: #fff;
-    padding: 0 45px 0 20px;   
+    padding: 0 45px 0 20px;
     transition: border-color 0.3s ease;
 }
 
@@ -1076,20 +1075,20 @@ input[type="date"] {
 }
 
 .input-busca:focus {
-    border-color: rgba(255, 255, 255, 0.2);   
+    border-color: rgba(255, 255, 255, 0.2);
     background-color: transparent;
 }
 
 .botao-filtrar {
-    display: flex;            
-    justify-content: center;  
+    display: flex;
+    justify-content: center;
     margin-bottom: 20px;
 }
 
 .botao-filtrar form {
     display: flex;
     gap: 5px;
-    align-items: center;     
+    align-items: center;
 }
 
 .input-busca {
