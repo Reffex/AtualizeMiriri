@@ -77,7 +77,7 @@ if (!empty($termo)) {
                 <tbody>
                     <?php if ($clientes->num_rows > 0): ?>
                         <?php while ($cliente = $clientes->fetch_assoc()): ?>
-                            <tr class="linha-borda">
+                            <tr class="linha-borda linha-clicavel" data-id="<?= $cliente['id'] ?>">
                                 <td><?= htmlspecialchars($cliente['nome']) ?></td>
                                 <td><?= htmlspecialchars($cliente['documento']) ?></td>
                                 <td>
@@ -103,6 +103,18 @@ if (!empty($termo)) {
             </div>
         </div>
     </div>
+    <script>
+        document.querySelectorAll('.linha-clicavel').forEach(function(linha) {
+            linha.addEventListener('click', function(e) {
+                if (!e.target.closest('a')) {
+                    const id = this.getAttribute('data-id');
+                    if (id) {
+                        window.location.href = '../operacoes/listar.php?id=' + id;
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
