@@ -96,9 +96,6 @@ if ($operacoes === false) {
                                 <td><?= date('d/m/Y H:i', strtotime($op['data_criacao'])) ?></td>
                                 <td>
                                     <div class="action-icons">
-                                        <a href="detalhes.php?id=<?= $op['id'] ?>" title="Detalhes">
-                                            <i class='bx bx-detail icone-acao'></i>
-                                        </a>
                                         <a href="editar.php?id=<?= $op['id'] ?>" title="Editar">
                                             <i class='bx bx-edit icone-acao'></i>
                                         </a>
@@ -137,4 +134,5 @@ if ($operacoes === false) {
         });
     </script>
 </body>
+
 </html>
