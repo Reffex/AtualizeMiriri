@@ -1,5 +1,6 @@
 <?php
-function obter_indice($mysqli, $indexador, $data) {
+function obter_indice($mysqli, $indexador, $data)
+{
     $stmt = $mysqli->prepare("SELECT valor FROM indices WHERE nome = ? AND data_referencia <= ? ORDER BY data_referencia DESC LIMIT 1");
     $stmt->bind_param("ss", $indexador, $data);
     $stmt->execute();
@@ -12,12 +13,12 @@ function obter_indice($mysqli, $indexador, $data) {
     return $valor;
 }
 
-function atualizar_indices($mysqli) {
-    // Configuração dos endpoints do BCB (SGS - Sistema Gerenciador de Séries Temporais)
+function atualizar_indices($mysqli)
+{
     $urls = [
-        'IPCA'  => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/1?formato=json', // IPCA acumulado 12 meses
-        'CDI'   => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/1?formato=json',  // Taxa DI (CDI)
-        'SELIC' => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/1?formato=json'  // SELIC Meta
+        'IPCA'  => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/20?formato=json',
+        'CDI'   => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/20?formato=json',
+        'SELIC' => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados/ultimos/20?formato=json'
     ];
 
     $mensagem = '';
@@ -37,21 +38,16 @@ function atualizar_indices($mysqli) {
                                      ON DUPLICATE KEY UPDATE valor = VALUES(valor)");
 
             foreach ($dados as $dado) {
-                if (!isset($dado['data'], $dado['valor'])) {
-                    continue;
-                }
+                if (!isset($dado['data'], $dado['valor'])) continue;
 
-                // Formata a data para YYYY-MM-01 (padrão mensal, exceto CDI/SELIC que são diários)
-                $data_formatada = ($nome == 'IPCA') 
-                    ? date('Y-m-01', strtotime($dado['data'])) 
-                    : $dado['data'];
-
-                $valor = floatval($dado['valor']);
+                $data_formatada = date('Y-m-d', strtotime(str_replace('/', '-', $dado['data'])));
+                $valor = floatval(str_replace(',', '.', $dado['valor']));
 
                 $stmt->bind_param("ssd", $nome, $data_formatada, $valor);
                 $stmt->execute();
             }
 
+            $stmt->close();
             $mensagem .= "$nome atualizado com sucesso.<br>";
         } else {
             $mensagem .= "Falha ao obter dados de $nome<br>";
