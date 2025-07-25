@@ -181,6 +181,16 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="../../assets/css/styles.css">
+    <script>
+        setTimeout(function() {
+            const msg = document.getElementById('alerta-msg');
+            if (msg) {
+                msg.style.transition = 'opacity 1s';
+                msg.style.opacity = 0;
+                setTimeout(() => msg.remove(), 1000);
+            }
+        }, 3000);
+    </script>
     <title>Atualize Miriri</title>
 </head>
 
@@ -193,11 +203,11 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
 
     <div class="form-box-wide-detalhes">
         <?php if (!empty($mensagem)): ?>
-            <p class="mensagem-erro"><?= htmlspecialchars($mensagem) ?></p>
+            <div id="alerta-msg" class="alerta-msg"><?= htmlspecialchars($mensagem) ?></div>
         <?php endif; ?>
 
         <?php if (isset($_GET['sucesso']) && $_GET['sucesso'] == 1): ?>
-            <p class="mensagem-sucesso">Operação atualizada com sucesso!</p>
+            <div id="alerta-msg" class="alerta-msg">Operação atualizada com sucesso!</div>
         <?php endif; ?>
 
         <h1 class="section-title" style="color: white;">Detalhes da operação</h1><br>
