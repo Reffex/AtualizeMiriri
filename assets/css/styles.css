@@ -301,7 +301,7 @@ h1.clientes-titulo {
     color: white;
 }
 
-#alerta-msg {
+.alerta-msg {
     text-align: center;
     color: #AFCA48;
     font-weight: bold;
@@ -417,8 +417,9 @@ h1.clientes-titulo {
 }
 
 .mensagem-erro {
-    color: red;
     text-align: center;
+    color: red;
+    font-weight: bold;
 }
 
 .form-row {
@@ -540,9 +541,8 @@ body.listar-operacoes-page {
 
 .mensagem-sucesso {
     text-align: center;
-    color: green;
+    color: #AFCA48;
     font-weight: bold;
-    margin-bottom: 20px;
 }
 
 .botao-criar-container {
@@ -787,7 +787,7 @@ body.listar-operacoes-page {
 
 .listar-operacoes .alerta-msg {
     text-align: center;
-    color: green;
+    color: #AFCA48;
     font-weight: bold;
 }
 
