@@ -223,7 +223,7 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                     <label for="indexador" style="color: white;">Indexador:</label>
                     <select name="indexador" id="indexador" required>
                         <option value="SELIC" <?= $op['indexador'] === 'SELIC' ? 'selected' : '' ?>>SELIC</option>
-                        <option value="CDI" <?= $op['indexador'] === 'CDI' ? 'selected' : '' ?>>CDI</option>
+                        <option value="CDI (CETIP) Diário" <?= $op['indexador'] === 'CDI (CETIP) Diário' ? 'selected' : '' ?>>CDI (CETIP) Diário</option>
                         <option value="IPCA" <?= $op['indexador'] === 'IPCA' ? 'selected' : '' ?>>IPCA</option>
                     </select>
                 </div>
