@@ -90,12 +90,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="../../assets/css/styles.css">
-    <title>Nova Operação - Atualize Miriri</title>
+    <title>Atualize Miriri</title>
 </head>
 
 <body>
+
+    <div class="botao-voltar-topo">
+        <a href="../operacoes/listar.php">
+            <i class='bx bx-arrow-back'></i> Sair
+        </a>
+    </div>
+
     <div class="form-box nova-operacao-box">
-        <h1 class="nova-operacao-titulo">Nova Operação</h1>
+        <h1 class="nova-operacao-titulo">Nova Operação</h1><br>
         <?php if (!empty($mensagem)): ?>
             <p class="mensagem-erro"><?= htmlspecialchars($mensagem) ?></p>
         <?php endif; ?>
@@ -205,9 +212,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <button type="submit" class="btn-criar">Criar operação</button>
             </div>
 
-            <div class="register-link">
-                <p><a href="../operacoes/listar.php">Voltar para operações</a></p>
-            </div>
         </form>
     </div>
 
