@@ -52,6 +52,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </head>
 
 <body>
+
+    <div class="botao-voltar-topo">
+        <a href="../clientes/listar.php">
+            <i class='bx bx-arrow-back'></i> Sair
+        </a>
+    </div>
+
     <div class="container">
         <div class="form-box">
             <h1 style="text-align:center;">Editar Cliente</h1>
@@ -75,9 +82,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                 <button type="submit" class="login">Salvar Alterações</button>
 
-                <div class="register-link">
-                    <p><a href="listar.php">Voltar para a lista</a></p>
-                </div>
             </form>
         </div>
     </div>
