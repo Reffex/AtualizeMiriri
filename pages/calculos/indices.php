@@ -12,18 +12,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar'])) {
     $mensagem = atualizar_indices($mysqli);
 }
 
-$termo = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
+$indices_disponiveis = ['IPCA', 'CDI', 'SELIC'];
 
-if (!empty($termo)) {
-    $stmt = $mysqli->prepare("SELECT * FROM indices WHERE nome LIKE ? ORDER BY data_referencia DESC");
-    $like = '%' . $termo . '%';
-    $stmt->bind_param("s", $like);
-    $stmt->execute();
-    $resultado = $stmt->get_result();
-    $stmt->close();
-} else {
-    $resultado = $mysqli->query("SELECT * FROM indices ORDER BY data_referencia DESC");
+$indice_selecionado = isset($_GET['indice']) ? trim($_GET['indice']) : '';
+$data_inicio = isset($_GET['data_inicio']) ? trim($_GET['data_inicio']) : '';
+$data_fim = isset($_GET['data_fim']) ? trim($_GET['data_fim']) : '';
+
+$where = [];
+$params = [];
+$types = '';
+
+if (!empty($indice_selecionado)) {
+    $where[] = "nome = ?";
+    $params[] = $indice_selecionado;
+    $types .= 's';
 }
+
+if (!empty($data_inicio)) {
+    $where[] = "data_referencia >= ?";
+    $params[] = date('Y-m-d', strtotime(str_replace('/', '-', $data_inicio)));
+    $types .= 's';
+}
+
+if (!empty($data_fim)) {
+    $where[] = "data_referencia <= ?";
+    $params[] = date('Y-m-d', strtotime(str_replace('/', '-', $data_fim)));
+    $types .= 's';
+}
+
+$sql = "SELECT * FROM indices";
+if (!empty($where)) {
+    $sql .= " WHERE " . implode(" AND ", $where);
+}
+$sql .= " ORDER BY data_referencia DESC";
+
+$stmt = $mysqli->prepare($sql);
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+$stmt->execute();
+$resultado = $stmt->get_result();
+$stmt->close();
 ?>
 
 <!DOCTYPE html>
@@ -47,8 +76,15 @@ if (!empty($termo)) {
 </head>
 
 <body>
-    <div class="form-box-wide">
-        <h1>Índices Econômicos</h1>
+
+    <div class="botao-voltar-topo">
+        <a href="../../index.php">
+            <i class='bx bx-arrow-back'></i> Sair
+        </a>
+    </div>
+
+    <div class="form-box-wide-indices">
+        <h1>Índices Econômicos</h1><br>
 
         <?php if (!empty($mensagem)): ?>
             <div id="alerta-msg" class="alerta-msg"><?= $mensagem ?></div>
@@ -58,12 +94,42 @@ if (!empty($termo)) {
             <button type="submit" name="atualizar" class="login botao-criar">Atualizar Índices</button>
         </form>
 
-        <div class="botao-filtrar">
-            <form method="GET" action="" style="display: flex; gap: 5px;">
-                <input type="text" name="buscar" placeholder="Buscar índice..." value="<?= htmlspecialchars($termo) ?>" class="input-busca">
-                <button type="submit" class="login" title="Filtrar">
-                    <i class='bx bx-search'></i>
-                </button>
+        <br>
+
+        <div class="filtro-container">
+            <form method="GET" action="" class="filtro-form">
+                <div class="filtro-linha-campos">
+                    <div class="form-item">
+                        <label for="indice" style="color: white;">Índice:</label>
+                        <select id="indice" name="indice">
+                            <option value="">Todos os índices</option>
+                            <?php foreach ($indices_disponiveis as $indice): ?>
+                                <option value="<?= $indice ?>" <?= $indice === $indice_selecionado ? 'selected' : '' ?>>
+                                    <?= $indice ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="form-item">
+                        <label for="data_inicio" style="color: white;">Data inicial:</label>
+                        <input type="date" id="data_inicio" name="data_inicio" value="<?= htmlspecialchars($data_inicio) ?>">
+                    </div>
+
+                    <div class="form-item">
+                        <label for="data_fim" style="color: white;">Data final:</label>
+                        <input type="date" id="data_fim" name="data_fim" value="<?= htmlspecialchars($data_fim) ?>">
+                    </div>
+                </div>
+
+                <div class="filtro-item">
+                    <button type="submit" class="login">
+                        <i class='bx bx-filter-alt'></i> Filtrar
+                    </button>
+                    <?php if (!empty($indice_selecionado) || !empty($data_inicio) || !empty($data_fim)): ?>
+                        <a href="?" class="login" style="padding: 8px 15px; margin-left: 5px;">Limpar</a>
+                    <?php endif; ?>
+                </div>
             </form>
         </div>
 
@@ -87,16 +153,13 @@ if (!empty($termo)) {
                 <?php else: ?>
                     <tr>
                         <td colspan="3">
-                            <?= empty($termo) ? 'Nenhum índice encontrado.' : 'Nenhum índice correspondente à busca.' ?>
+                            Nenhum índice encontrado com os filtros selecionados.
                         </td>
                     </tr>
                 <?php endif; ?>
             </tbody>
         </table>
 
-        <div class="register-link">
-            <p><a href="../../index.php">Voltar para o menu</a></p>
-        </div>
     </div>
 </body>
 
