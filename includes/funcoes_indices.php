@@ -16,12 +16,16 @@ function obter_indice($mysqli, $indexador, $data)
 function atualizar_indices($mysqli)
 {
     $urls = [
-        'IPCA'  => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/20?formato=json',
-        'CDI'   => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados/ultimos/20?formato=json',
-        'SELIC' => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados/ultimos/20?formato=json'
+        'IPCA'  => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados?formato=json',
+        'CDI'   => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados?formato=json&dataInicial=' . date('d/m/Y', strtotime('-10 years')),
+        'SELIC' => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=json'
     ];
 
     $mensagem = '';
+
+    if ($mysqli->connect_errno) {
+        return "Erro na conexão: " . $mysqli->connect_error;
+    }
 
     foreach ($urls as $nome => $url) {
         $json = @file_get_contents($url);
@@ -35,7 +39,12 @@ function atualizar_indices($mysqli)
             }
 
             $stmt = $mysqli->prepare("INSERT INTO indices (nome, data_referencia, valor) VALUES (?, ?, ?) 
-                                     ON DUPLICATE KEY UPDATE valor = VALUES(valor)");
+                                    ON DUPLICATE KEY UPDATE valor = VALUES(valor)");
+
+            if ($stmt === false) {
+                $mensagem .= "Erro ao preparar consulta para $nome: " . $mysqli->error . "<br>";
+                continue;
+            }
 
             foreach ($dados as $dado) {
                 if (!isset($dado['data'], $dado['valor'])) continue;
@@ -43,12 +52,18 @@ function atualizar_indices($mysqli)
                 $data_formatada = date('Y-m-d', strtotime(str_replace('/', '-', $dado['data'])));
                 $valor = floatval(str_replace(',', '.', $dado['valor']));
 
-                $stmt->bind_param("ssd", $nome, $data_formatada, $valor);
-                $stmt->execute();
+                if (!$stmt->bind_param("ssd", $nome, $data_formatada, $valor)) {
+                    $mensagem .= "Erro ao vincular parâmetros para $nome: " . $stmt->error . "<br>";
+                    continue;
+                }
+
+                if (!$stmt->execute()) {
+                    $mensagem .= "Erro ao inserir dados de $nome: " . $stmt->error . "<br>";
+                }
             }
 
             $stmt->close();
-            $mensagem .= "$nome atualizado com sucesso.<br>";
+            $mensagem .= "$nome processado.<br>";
         } else {
             $mensagem .= "Falha ao obter dados de $nome<br>";
         }
