@@ -17,7 +17,7 @@ function atualizar_indices($mysqli)
 {
     $urls = [
         'IPCA'  => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados?formato=json',
-        'CDI'   => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados?formato=json&dataInicial=' . date('d/m/Y', strtotime('-10 years')),
+        'CDI (CETIP) Diário'   => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados?formato=json&dataInicial=' . date('d/m/Y', strtotime('-10 years')),
         'SELIC' => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=json'
     ];
 
