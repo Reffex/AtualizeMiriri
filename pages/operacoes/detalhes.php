@@ -202,6 +202,8 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
     </div>
 
     <div class="form-box-wide-detalhes">
+        <h1 class="section-title" style="color: white;">Detalhes da operação</h1><br>
+
         <?php if (!empty($mensagem)): ?>
             <div id="alerta-msg" class="alerta-msg"><?= htmlspecialchars($mensagem) ?></div>
         <?php endif; ?>
@@ -209,8 +211,6 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
         <?php if (isset($_GET['sucesso']) && $_GET['sucesso'] == 1): ?>
             <div id="alerta-msg" class="alerta-msg">Operação atualizada com sucesso!</div>
         <?php endif; ?>
-
-        <h1 class="section-title" style="color: white;">Detalhes da operação</h1><br>
 
         <form method="POST" id="formEditarOperacao">
             <input type="hidden" name="editar_operacao" value="1">
