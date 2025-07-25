@@ -8,6 +8,7 @@ if (isset($_GET['sucesso'])) {
 }
 
 $termo = isset($_GET['buscar']) ? trim($_GET['buscar']) : '';
+$cliente_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 if (!empty($termo)) {
     $stmt = $mysqli->prepare("SELECT o.*, c.nome AS cliente_nome 
@@ -20,6 +21,16 @@ if (!empty($termo)) {
     $stmt->execute();
     $operacoes = $stmt->get_result();
     $stmt->close();
+} elseif ($cliente_id > 0) {
+    $stmt = $mysqli->prepare("SELECT o.*, c.nome AS cliente_nome 
+                             FROM operacoes o 
+                             JOIN clientes c ON o.cliente_id = c.id 
+                             WHERE o.cliente_id = ?
+                             ORDER BY o.data_criacao DESC");
+    $stmt->bind_param("i", $cliente_id);
+    $stmt->execute();
+    $operacoes = $stmt->get_result();
+    $stmt->close();
 } else {
     $operacoes = $mysqli->query("SELECT o.*, c.nome AS cliente_nome 
                                 FROM operacoes o 
@@ -27,9 +38,6 @@ if (!empty($termo)) {
                                 ORDER BY o.data_criacao DESC");
 }
 
-if ($operacoes === false) {
-    die("Erro na consulta SQL: " . $mysqli->error);
-}
 ?>
 
 <!DOCTYPE html>
@@ -53,8 +61,15 @@ if ($operacoes === false) {
 </head>
 
 <body class="listar-operacoes">
+
+    <div class="botao-voltar-topo">
+        <a href="../../index.php">
+            <i class='bx bx-arrow-back'></i> Sair
+        </a>
+    </div>
+
     <div class="form-box-wide listar-operacoes">
-        <h1 class="titulo-centralizado">Operações</h1>
+        <h1 class="titulo-centralizado">Operações</h1><br>
 
         <?php if (!empty($mensagem)): ?>
             <div id="alerta-msg" class="alerta-msg">
@@ -93,12 +108,9 @@ if ($operacoes === false) {
                             <tr class="linha-clicavel" data-id="<?= $op['id'] ?>">
                                 <td><?= htmlspecialchars($op['cliente_nome']) ?></td>
                                 <td><?= htmlspecialchars($op['identificador']) ?></td>
-                                <td><?= date('d/m/Y H:i', strtotime($op['data_criacao'])) ?></td>
+                                <td><?= date('d/m/Y', strtotime($op['data_criacao'])) ?></td>
                                 <td>
                                     <div class="action-icons">
-                                        <a href="editar.php?id=<?= $op['id'] ?>" title="Editar">
-                                            <i class='bx bx-edit icone-acao'></i>
-                                        </a>
                                         <a href="excluir.php?id=<?= $op['id'] ?>" onclick="return confirm('Deseja excluir?')" title="Excluir">
                                             <i class='bx bx-trash icone-acao icone-excluir'></i>
                                         </a>
@@ -117,9 +129,6 @@ if ($operacoes === false) {
             </table>
         </div>
 
-        <div class="register-link">
-            <p><a href="../../index.php">Voltar para o menu</a></p>
-        </div>
     </div>
     <script>
         document.querySelectorAll('.linha-clicavel').forEach(function(linha) {
