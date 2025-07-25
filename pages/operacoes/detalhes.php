@@ -2,25 +2,44 @@
 require_once '../../includes/auto_check.php';
 require_once '../../includes/connect_app.php';
 
+function normalizarNumero($valor)
+{
+    if (is_string($valor)) {
+        $valor = str_replace(['.', ','], ['', '.'], $valor);
+    }
+    return $valor;
+}
+
 $id = $_GET['id'] ?? null;
+$mensagem = '';
+
 if (!$id || !is_numeric($id)) {
-    echo "ID da operação inválido.";
+    header("Location: listar.php?erro=1");
     exit;
 }
 
 // Obter dados da operação
-$stmt = $mysqli->prepare("SELECT o.*, c.nome AS cliente_nome FROM operacoes o JOIN clientes c ON o.cliente_id = c.id WHERE o.id = ?");
+$stmt = $mysqli->prepare("
+    SELECT o.*, c.nome AS cliente_nome, c.documento
+    FROM operacoes o
+    JOIN clientes c ON c.id = o.cliente_id
+    WHERE o.id = ?
+");
 $stmt->bind_param("i", $id);
 $stmt->execute();
-$op = $stmt->get_result()->fetch_assoc();
-$stmt->close();
+$result = $stmt->get_result();
+$op = $result->fetch_assoc();
+
+if (!$op) {
+    header("Location: listar.php?erro=2");
+    exit;
+}
 
 // Obter lançamentos
 $stmt = $mysqli->prepare("SELECT * FROM lancamentos WHERE operacao_id = ? ORDER BY data ASC");
 $stmt->bind_param("i", $id);
 $stmt->execute();
 $lancamentos = $stmt->get_result();
-$stmt->close();
 
 // Calcular operação
 require_once '../../includes/calcular_operacao.php';
@@ -28,6 +47,73 @@ $valores = calcular_operacao($mysqli, $op, $lancamentos);
 
 // Processar formulários
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    // Editar operação
+    if (isset($_POST['editar_operacao'])) {
+        try {
+            $identificador = trim($_POST['identificador']);
+            $indexador = $_POST['indexador'];
+            $periodicidade = $_POST['periodicidade'];
+
+            $atualizar_ate = $_POST['atualizar_ate'];
+            $atualizar_dia_debito = (int) $_POST['atualizar_dia_debito'];
+            $atualizar_correcao_monetaria = normalizarNumero($_POST['atualizar_correcao_monetaria']);
+            $atualizar_juros_nominais = normalizarNumero($_POST['atualizar_juros_nominais']);
+
+            $alterar_taxas_em = $_POST['alterar_taxas_em'];
+            $alterar_dia_debito = (int) $_POST['alterar_dia_debito'];
+            $alterar_correcao_monetaria = normalizarNumero($_POST['alterar_correcao_monetaria']);
+            $alterar_juros_nominais = normalizarNumero($_POST['alterar_juros_nominais']);
+
+            $valor_multa = ($_POST['valor_multa'] !== '') ? normalizarNumero($_POST['valor_multa']) : 0.0;
+            $valor_honorarios = ($_POST['valor_honorarios'] !== '') ? normalizarNumero($_POST['valor_honorarios']) : 0.0;
+            $observacao = trim($_POST['observacao']);
+
+            if (strtotime($atualizar_ate) === false || strtotime($alterar_taxas_em) === false) {
+                throw new Exception("Datas inválidas informadas");
+            }
+
+            $stmt = $mysqli->prepare("UPDATE operacoes SET 
+                identificador = ?, indexador = ?, periodicidade = ?, 
+                atualizar_ate = ?, atualizar_dia_debito = ?, atualizar_correcao_monetaria = ?, atualizar_juros_nominais = ?, 
+                alterar_taxas_em = ?, alterar_dia_debito = ?, alterar_correcao_monetaria = ?, alterar_juros_nominais = ?, 
+                valor_multa = ?, valor_honorarios = ?, observacao = ?
+                WHERE id = ?
+            ");
+
+            if (!$stmt) {
+                throw new Exception("Erro na preparação da query: " . $mysqli->error);
+            }
+
+            $stmt->bind_param(
+                "ssssiddsidddssi",
+                $identificador,
+                $indexador,
+                $periodicidade,
+                $atualizar_ate,
+                $atualizar_dia_debito,
+                $atualizar_correcao_monetaria,
+                $atualizar_juros_nominais,
+                $alterar_taxas_em,
+                $alterar_dia_debito,
+                $alterar_correcao_monetaria,
+                $alterar_juros_nominais,
+                $valor_multa,
+                $valor_honorarios,
+                $observacao,
+                $id
+            );
+
+            if ($stmt->execute()) {
+                header("Location: detalhes.php?id=$id&sucesso=1");
+                exit();
+            } else {
+                throw new Exception("Erro ao atualizar operação: " . $stmt->error);
+            }
+        } catch (Exception $e) {
+            $mensagem = $e->getMessage();
+        }
+    }
+
     // Adicionar novo lançamento
     if (isset($_POST['adicionar_lancamento'])) {
         $data = $_POST['data'] ?? '';
@@ -96,144 +182,258 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="../../assets/css/styles.css">
     <title>Atualize Miriri</title>
-
 </head>
 
 <body>
-    <div class="form-box-wide-detalhes">
-        <div class="info-header">
-            <h1 class="section-title" style="color: white;">Lançamentos</h1>
-
-            <!-- Tabela de Lançamentos Editável -->
-            <table class="tabela-extrato">
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Descrição</th>
-                        <th>Valor</th>
-                        <th>Tipo</th>
-                        <th>Ação</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Formulário para novo lançamento -->
-                    <tr>
-                        <form method="POST" id="formNovoLancamento">
-                            <input type="hidden" name="adicionar_lancamento" value="1">
-                            <td>
-                                <input type="date" name="data" required class="table-input">
-                            </td>
-                            <td>
-                                <input type="text" name="descricao" placeholder="Descrição" required class="table-input">
-                            </td>
-                            <td>
-                                <input type="text" name="valor" placeholder="0,00" required class="table-input" oninput="formatarValor(this)">
-                            </td>
-                            <td>
-                                <select name="tipo" required class="table-select">
-                                    <option value="debito">Débito</option>
-                                    <option value="credito">Crédito</option>
-                                </select>
-                            </td>
-                            <td>
-                                <button type="submit" style="background: none; border: none; cursor: pointer;">
-                                    <i class='bx bx-save' style="font-size: 20px; color: #333; transition: 0.3s;"
-                                        onmouseover="this.style.color='#AEF0FF'"
-                                        onmouseout="this.style.color='#333'"></i>
-                                </button>
-                            </td>
-                        </form>
-                    </tr>
-
-                    <!-- Lançamentos existentes -->
-                    <?php
-                    $lancamentos->data_seek(0);
-                    while ($l = $lancamentos->fetch_assoc()):
-                    ?>
-                        <tr data-id="<?= $l['id'] ?>">
-                            <td class="editable" data-field="data"><?= date('d/m/Y', strtotime($l['data'])) ?></td>
-                            <td class="editable" data-field="descricao"><?= htmlspecialchars($l['descricao']) ?></td>
-                            <td class="editable" data-field="valor">R$ <?= number_format($l['valor'], 2, ',', '.') ?></td>
-                            <td class="editable-select" data-field="tipo">
-                                <?= $l['tipo'] === 'debito' ? 'Débito' : 'Crédito' ?>
-                            </td>
-                            <td>
-                                <div class="action-icons">
-                                    <form method="POST" style="display: inline;">
-                                        <input type="hidden" name="lancamento_id" value="<?= $l['id'] ?>">
-                                        <button type="submit" name="excluir_lancamento" style="background: none; border: none; cursor: pointer;">
-                                            <i class='bx bx-trash' style="font-size: 20px; color: #333; transition: 0.3s;"
-                                                onmouseover="this.style.color='red'"
-                                                onmouseout="this.style.color='#333'"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
-
-            <h1 class="section-title" style="color: white;">Extrato do Cálculo</h1>
-
-            <!-- Tabela de Resumo do Extrato -->
-            <table class="tabela-extrato">
-                <thead>
-                    <tr>
-                        <th>Movimentação<br>acumulada no<br>período</th>
-                        <th>Correção<br>monetária<br>acumulada no<br>período</th>
-                        <th>Juros<br>acumulados<br>no período</th>
-                        <th>Multa</th>
-                        <th>Honorários</th>
-                        <th>Saldo total<br>atualizado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>R$ <?= number_format($movimentacao, 2, ',', '.') ?></td>
-                        <td>R$ <?= number_format($correcao, 2, ',', '.') ?></td>
-                        <td>R$ <?= number_format($juros, 2, ',', '.') ?></td>
-                        <td>R$ <?= number_format($multa, 2, ',', '.') ?></td>
-                        <td>R$ <?= number_format($honorarios, 2, ',', '.') ?></td>
-                        <td>R$ <?= number_format($saldo_atualizado, 2, ',', '.') ?></td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <!-- Tabela de Extrato Detalhado -->
-            <table class="tabela-extrato">
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Descrição</th>
-                        <th>Débito</th>
-                        <th>Crédito</th>
-                        <th>Saldo</th>
-                        <th>Índices</th>
-                        <th>Dias úteis</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($valores['extrato_detalhado'] as $linha): ?>
-                        <tr>
-                            <td><?= htmlspecialchars($linha['data']) ?></td>
-                            <td><?= htmlspecialchars($linha['descricao']) ?></td>
-                            <td class="debito"><?= $linha['debito'] ? 'R$ ' . number_format($linha['debito'], 2, ',', '.') : '' ?></td>
-                            <td class="credito"><?= $linha['credito'] ? 'R$ ' . number_format($linha['credito'], 2, ',', '.') : '' ?></td>
-                            <td>R$ <?= number_format($linha['saldo'], 2, ',', '.') ?></td>
-                            <td><?= htmlspecialchars($linha['indice']) ?></td>
-                            <td><?= htmlspecialchars($linha['dias_uteis']) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-            <br>
-            <div class="register-link">
-                <p><a href="../../pages/operacoes/listar.php">Voltar para operações</a></p>
-            </div>
-        </div>
+    <div class="botao-voltar-topo">
+        <a href="../operacoes/listar.php">
+            <i class='bx bx-arrow-back'></i> Sair
+        </a>
     </div>
 
+    <div class="form-box-wide-detalhes">
+        <?php if (!empty($mensagem)): ?>
+            <p class="mensagem-erro"><?= htmlspecialchars($mensagem) ?></p>
+        <?php endif; ?>
+
+        <?php if (isset($_GET['sucesso']) && $_GET['sucesso'] == 1): ?>
+            <p class="mensagem-sucesso">Operação atualizada com sucesso!</p>
+        <?php endif; ?>
+
+        <h1 class="section-title" style="color: white;">Detalhes da operação</h1><br>
+
+        <form method="POST" id="formEditarOperacao">
+            <input type="hidden" name="editar_operacao" value="1">
+
+            <!-- Cliente e identificador -->
+            <div class="form-row">
+                <div class="form-item">
+                    <label for="cliente_nome" style="color: white;">Cliente:</label>
+                    <input type="text" value="<?= htmlspecialchars($op['cliente_nome']) ?> (<?= htmlspecialchars($op['documento']) ?>)" disabled>
+                </div>
+                <div class="form-item">
+                    <label for="identificador" style="color: white;">Identificador da operação:</label>
+                    <input type="text" name="identificador" id="identificador" value="<?= htmlspecialchars($op['identificador']) ?>" required>
+                </div>
+            </div>
+
+            <!-- Indexador e Periodicidade -->
+            <div class="form-row">
+                <div class="form-item">
+                    <label for="indexador" style="color: white;">Indexador:</label>
+                    <select name="indexador" id="indexador" required>
+                        <option value="SELIC" <?= $op['indexador'] === 'SELIC' ? 'selected' : '' ?>>SELIC</option>
+                        <option value="CDI" <?= $op['indexador'] === 'CDI' ? 'selected' : '' ?>>CDI</option>
+                        <option value="IPCA" <?= $op['indexador'] === 'IPCA' ? 'selected' : '' ?>>IPCA</option>
+                    </select>
+                </div>
+                <div class="form-item">
+                    <label for="periodicidade" style="color: white;">Periodicidade:</label>
+                    <select name="periodicidade" id="periodicidade" required>
+                        <option value="Mensal" <?= $op['periodicidade'] === 'Mensal' ? 'selected' : '' ?>>Mensal</option>
+                        <option value="Trimestral" <?= $op['periodicidade'] === 'Trimestral' ? 'selected' : '' ?>>Trimestral</option>
+                        <option value="Semestral" <?= $op['periodicidade'] === 'Semestral' ? 'selected' : '' ?>>Semestral</option>
+                        <option value="Anual" <?= $op['periodicidade'] === 'Anual' ? 'selected' : '' ?>>Anual</option>
+                    </select>
+                </div>
+            </div>
+            <br><br>
+
+            <!-- Atualizar até -->
+            <div class="form-row">
+                <div class="form-item">
+                    <label for="atualizar_ate" style="color: white;">Atualizar até:</label>
+                    <input type="date" name="atualizar_ate" id="atualizar_ate" value="<?= $op['atualizar_ate'] ?>" required>
+                </div>
+                <div class="form-item">
+                    <label for="atualizar_dia_debito" style="color: white;">Dia do débito:</label>
+                    <input type="number" name="atualizar_dia_debito" id="atualizar_dia_debito" min="1" max="31" value="<?= $op['atualizar_dia_debito'] ?>" required>
+                </div>
+                <div class="form-item">
+                    <label for="atualizar_correcao_monetaria" style="color: white;">Correção monetária (%):</label>
+                    <input type="text" step="0.001" name="atualizar_correcao_monetaria" id="atualizar_correcao_monetaria" value="<?= number_format($op['atualizar_correcao_monetaria'], 3, ',', '') ?>" pattern="^[0-9]+([,\.][0-9]+)?$" required>
+                </div>
+                <div class="form-item">
+                    <label for="atualizar_juros_nominais" style="color: white;">Juros nominais (%):</label>
+                    <input type="text" step="0.001" name="atualizar_juros_nominais" id="atualizar_juros_nominais" value="<?= number_format($op['atualizar_juros_nominais'], 3, ',', '') ?>" pattern="^[0-9]+([,\.][0-9]+)?$" required>
+                </div>
+            </div>
+
+            <!-- Alterar taxas em -->
+            <div class="form-row">
+                <div class="form-item">
+                    <label for="alterar_taxas_em" style="color: white;">Alterar taxas em:</label>
+                    <input type="date" name="alterar_taxas_em" id="alterar_taxas_em" value="<?= $op['alterar_taxas_em'] ?>" required>
+                </div>
+                <div class="form-item">
+                    <label for="alterar_dia_debito" style="color: white;">Dia do Débito:</label>
+                    <input type="number" name="alterar_dia_debito" id="alterar_dia_debito" value="<?= $op['alterar_dia_debito'] ?>" min="1" max="31" required>
+                </div>
+                <div class="form-item">
+                    <label for="alterar_correcao_monetaria" style="color: white;">Correção monetária (%):</label>
+                    <input type="text" step="0.001" name="alterar_correcao_monetaria" id="alterar_correcao_monetaria" value="<?= number_format($op['alterar_correcao_monetaria'], 3, ',', '') ?>" pattern="^[0-9]+([,\.][0-9]+)?$" required>
+                </div>
+                <div class="form-item">
+                    <label for="alterar_juros_nominais" style="color: white;">Juros nominais (%):</label>
+                    <input type="text" step="0.001" name="alterar_juros_nominais" id="alterar_juros_nominais" value="<?= number_format($op['alterar_juros_nominais'], 3, ',', '') ?>" pattern="^[0-9]+([,\.][0-9]+)?$" required>
+                </div>
+            </div>
+
+            <br><br>
+
+            <!-- Multa e Honorários -->
+            <div class="form-row">
+                <div class="form-item">
+                    <label for="valor_multa" style="color: white;">Valor da multa (R$):</label>
+                    <input type="text" step="0.01" name="valor_multa" id="valor_multa" value="<?= number_format($op['valor_multa'], 2, ',', '') ?>" pattern="^[0-9]+([,\.][0-9]+)?$">
+                </div>
+                <div class="form-item">
+                    <label for="valor_honorarios" style="color: white;">Valor dos honorários (R$):</label>
+                    <input type="text" step="0.01" name="valor_honorarios" id="valor_honorarios" value="<?= number_format($op['valor_honorarios'], 2, ',', '') ?>" pattern="^[0-9]+([,\.][0-9]+)?$">
+                </div>
+            </div>
+
+            <!-- Observação -->
+            <div class="form-item">
+                <label for="observacao" style="color: white;">Observação:</label>
+                <textarea name="observacao" id="observacao" placeholder="Opcional"><?= htmlspecialchars($op['observacao']) ?></textarea>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn-criar">Salvar alterações</button>
+            </div>
+        </form>
+
+        <hr class="linha-transparente">
+        <br>
+
+        <h1 class="section-title" style="color: white;">Lançamentos</h1>
+
+        <!-- Tabela de Lançamentos Editável -->
+        <table class="tabela-extrato">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Descrição</th>
+                    <th>Valor</th>
+                    <th>Tipo</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Formulário para novo lançamento -->
+                <tr>
+                    <form method="POST" id="formNovoLancamento">
+                        <input type="hidden" name="adicionar_lancamento" value="1">
+                        <td>
+                            <input type="date" name="data" required class="table-input">
+                        </td>
+                        <td>
+                            <input type="text" name="descricao" placeholder="Descrição" required class="table-input">
+                        </td>
+                        <td>
+                            <input type="text" name="valor" placeholder="0,00" required class="table-input" oninput="formatarValor(this)">
+                        </td>
+                        <td>
+                            <select name="tipo" required class="table-select">
+                                <option value="debito">Débito</option>
+                                <option value="credito">Crédito</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button type="submit" style="background: none; border: none; cursor: pointer;">
+                                <i class='bx bx-save' style="font-size: 20px; color: #333; transition: 0.3s;"
+                                    onmouseover="this.style.color='#AEF0FF'"
+                                    onmouseout="this.style.color='#333'"></i>
+                            </button>
+                        </td>
+                    </form>
+                </tr>
+
+                <!-- Lançamentos existentes -->
+                <?php
+                $lancamentos->data_seek(0);
+                while ($l = $lancamentos->fetch_assoc()):
+                ?>
+                    <tr data-id="<?= $l['id'] ?>">
+                        <td class="editable" data-field="data"><?= date('d/m/Y', strtotime($l['data'])) ?></td>
+                        <td class="editable" data-field="descricao"><?= htmlspecialchars($l['descricao']) ?></td>
+                        <td class="editable" data-field="valor">R$ <?= number_format($l['valor'], 2, ',', '.') ?></td>
+                        <td class="editable-select" data-field="tipo">
+                            <?= $l['tipo'] === 'debito' ? 'Débito' : 'Crédito' ?>
+                        </td>
+                        <td>
+                            <div class="action-icons">
+                                <form method="POST" style="display: inline;">
+                                    <input type="hidden" name="lancamento_id" value="<?= $l['id'] ?>">
+                                    <button type="submit" name="excluir_lancamento" style="background: none; border: none; cursor: pointer;">
+                                        <i class='bx bx-trash' style="font-size: 20px; color: #333; transition: 0.3s;"
+                                            onmouseover="this.style.color='red'"
+                                            onmouseout="this.style.color='#333'"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+
+        <h1 class="section-title" style="color: white;">Extrato do Cálculo</h1>
+
+        <!-- Tabela de Resumo do Extrato -->
+        <table class="tabela-extrato">
+            <thead>
+                <tr>
+                    <th>Movimentação<br>acumulada no<br>período</th>
+                    <th>Correção<br>monetária<br>acumulada no<br>período</th>
+                    <th>Juros<br>acumulados<br>no período</th>
+                    <th>Multa</th>
+                    <th>Honorários</th>
+                    <th>Saldo total<br>atualizado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>R$ <?= number_format($movimentacao, 2, ',', '.') ?></td>
+                    <td>R$ <?= number_format($correcao, 2, ',', '.') ?></td>
+                    <td>R$ <?= number_format($juros, 2, ',', '.') ?></td>
+                    <td>R$ <?= number_format($multa, 2, ',', '.') ?></td>
+                    <td>R$ <?= number_format($honorarios, 2, ',', '.') ?></td>
+                    <td>R$ <?= number_format($saldo_atualizado, 2, ',', '.') ?></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Tabela de Extrato Detalhado -->
+        <table class="tabela-extrato">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Descrição</th>
+                    <th>Débito</th>
+                    <th>Crédito</th>
+                    <th>Saldo</th>
+                    <th>Índices</th>
+                    <th>Dias úteis</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($valores['extrato_detalhado'] as $linha): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($linha['data']) ?></td>
+                        <td><?= htmlspecialchars($linha['descricao']) ?></td>
+                        <td class="debito"><?= $linha['debito'] ? 'R$ ' . number_format($linha['debito'], 2, ',', '.') : '' ?></td>
+                        <td class="credito"><?= $linha['credito'] ? 'R$ ' . number_format($linha['credito'], 2, ',', '.') : '' ?></td>
+                        <td>R$ <?= number_format($linha['saldo'], 2, ',', '.') ?></td>
+                        <td><?= htmlspecialchars($linha['indice']) ?></td>
+                        <td><?= htmlspecialchars($linha['dias_uteis']) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <br>
+    </div>
 
     <!-- Modal de edição -->
     <div id="editModal" class="modal">
