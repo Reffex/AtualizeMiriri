@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar'])) {
     $mensagem = atualizar_indices($mysqli);
 }
 
-$indices_disponiveis = ['IPCA', 'CDI', 'SELIC'];
+$indices_disponiveis = ['IPCA', 'CDI (CETIP) Diário', 'SELIC'];
 
 $indice_selecionado = isset($_GET['indice']) ? trim($_GET['indice']) : '';
 $data_inicio = isset($_GET['data_inicio']) ? trim($_GET['data_inicio']) : '';
@@ -153,7 +153,7 @@ $stmt->close();
                 <?php else: ?>
                     <tr>
                         <td colspan="3">
-                            Nenhum índice encontrado com os filtros selecionados.
+                            Nenhum índice encontrado.
                         </td>
                     </tr>
                 <?php endif; ?>
