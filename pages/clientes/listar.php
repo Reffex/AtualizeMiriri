@@ -37,9 +37,16 @@ if (!empty($termo)) {
 </head>
 
 <body>
+
+    <div class="botao-voltar-topo">
+        <a href="../../index.php">
+            <i class='bx bx-arrow-back'></i> Sair
+        </a>
+    </div>
+
     <div class="form-box-wide">
         <div class="form-box">
-            <h1 class="clientes-titulo">Clientes</h1>
+            <h1 class="clientes-titulo">Clientes</h1><br>
 
             <?php if (isset($_GET['sucesso'])): ?>
                 <div id="alerta-msg">
@@ -98,9 +105,6 @@ if (!empty($termo)) {
                 </tbody>
             </table>
 
-            <div class="register-link">
-                <p><a href="../../index.php">Voltar para o menu</a></p>
-            </div>
         </div>
     </div>
     <script>
