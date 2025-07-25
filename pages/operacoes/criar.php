@@ -133,7 +133,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <label for="indexador">Indexador:</label>
                     <select name="indexador" id="indexador" required>
                         <option value="SELIC">SELIC</option>
-                        <option value="CDI">CDI</option>
+                        <option value="CDI (CETIP) Diário">CDI (CETIP) Diário</option>
                         <option value="IPCA">IPCA</option>
                     </select>
                 </div>
