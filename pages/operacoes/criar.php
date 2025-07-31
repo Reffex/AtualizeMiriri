@@ -135,6 +135,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         <option value="SELIC">SELIC</option>
                         <option value="CDI (CETIP) Diário">CDI (CETIP) Diário</option>
                         <option value="IPCA">IPCA</option>
+                        <option value="INPC">INPC</option>
                     </select>
                 </div>
                 <div class="form-item">
