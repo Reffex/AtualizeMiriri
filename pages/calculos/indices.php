@@ -12,7 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['atualizar'])) {
     $mensagem = atualizar_indices($mysqli);
 }
 
-$indices_disponiveis = ['IPCA', 'CDI (CETIP) Diário', 'SELIC'];
+$indices_disponiveis = ['IPCA', 'CDI (CETIP) Diário', 'SELIC', 'INPC'];
 
 $indice_selecionado = isset($_GET['indice']) ? trim($_GET['indice']) : '';
 $data_inicio = isset($_GET['data_inicio']) ? trim($_GET['data_inicio']) : '';
