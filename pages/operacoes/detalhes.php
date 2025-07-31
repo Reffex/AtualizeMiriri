@@ -235,6 +235,7 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                         <option value="SELIC" <?= $op['indexador'] === 'SELIC' ? 'selected' : '' ?>>SELIC</option>
                         <option value="CDI (CETIP) Diário" <?= $op['indexador'] === 'CDI (CETIP) Diário' ? 'selected' : '' ?>>CDI (CETIP) Diário</option>
                         <option value="IPCA" <?= $op['indexador'] === 'IPCA' ? 'selected' : '' ?>>IPCA</option>
+                        <option value="INPC" <?= $op['indexador'] === 'INPC' ? 'selected' : '' ?>>INPC</option>
                     </select>
                 </div>
                 <div class="form-item">
@@ -425,7 +426,7 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                     <th>Crédito</th>
                     <th>Saldo</th>
                     <th>Índices</th>
-                    <th>Dias úteis</th>
+                    <th>Dias corridos</th>
                 </tr>
             </thead>
             <tbody>
@@ -437,7 +438,7 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                         <td class="credito"><?= $linha['credito'] ? 'R$ ' . number_format($linha['credito'], 2, ',', '.') : '' ?></td>
                         <td>R$ <?= number_format($linha['saldo'], 2, ',', '.') ?></td>
                         <td><?= htmlspecialchars($linha['indice']) ?></td>
-                        <td><?= htmlspecialchars($linha['dias_uteis']) ?></td>
+                        <td><?= htmlspecialchars($linha['dias_corridos'] ?? 0) ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
