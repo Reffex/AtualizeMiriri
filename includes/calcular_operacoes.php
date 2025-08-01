@@ -5,214 +5,254 @@ function calcular_operacao($mysqli, $operacao, $lancamentos_result) {
     $extrato = [];
     $totais = [
         'movimentacao' => 0,
-        'correcao' => 0,    // Será acumulado como negativo
+        'correcao' => 0,
         'juros' => 0,
         'multa' => 0,
         'honorarios' => 0,
         'saldo_atualizado' => 0
     ];
 
-    $indexador = $operacao['indexador'];
-    $periodicidade = $operacao['periodicidade'];
-    $correcao_pct = ($operacao['atualizar_correcao_monetaria'] ?? 0) / 100;
-    $juros_pct_mensal = ($operacao['atualizar_juros_nominais'] ?? 0) / 100;
-    $dia_debito = (int)($operacao['atualizar_dia_debito'] ?? 1);
-    $data_fim = new DateTime($operacao['atualizar_ate']);
-
-    $lancamentos = [];
-    while($row = $lancamentos_result->fetch_assoc()) $lancamentos[] = $row;
-    usort($lancamentos, fn($a,$b) => strtotime($a['data']) - strtotime($b['data']));
-
-    // 1. Inicialização com primeiro débito
-    $data_inicio = null;
-    $saldo = 0.0;
-    foreach ($lancamentos as $l) {
-        if (strtolower($l['tipo']) === 'debito') {
-            $data_inicio = new DateTime($l['data']);
-            $valor = (float)$l['valor'];
-            $saldo -= $valor;
-            $extrato[] = [
-                'data' => $data_inicio->format('d/m/Y'),
-                'descricao' => $l['descricao'],
-                'debito' => -$valor,
-                'credito' => 0,
-                'saldo' => $saldo,
-                'indice' => '',
-                'dias_corridos' => 0
-            ];
-            break;
+    try {
+        if (!$mysqli || !$operacao || !$lancamentos_result) {
+            throw new Exception("Parâmetros inválidos para cálculo");
         }
-    }
-    if (!$data_inicio) return array_merge($totais, ['extrato_detalhado'=>[]]);
 
-    // 2. Processar lançamentos intermediários
-    foreach ($lancamentos as $l) {
-        $data_lanc = new DateTime($l['data']);
-        if ($data_lanc <= $data_inicio) continue;
-        
-        $valor = (float)$l['valor'];
-        if (strtolower($l['tipo']) === 'debito') {
-            $saldo -= $valor;
-            $extrato[] = [
-                'data' => $data_lanc->format('d/m/Y'),
-                'descricao' => $l['descricao'],
-                'debito' => -$valor,
-                'credito' => 0,
-                'saldo' => $saldo,
-                'indice' => '',
-                'dias_corridos' => 0
-            ];
-        } else {
-            $saldo += $valor;
+        $indexador = $operacao['indexador'] ?? 'SELIC';
+        $periodicidade = $operacao['periodicidade'] ?? 'Mensal';
+        $correcao_pct = (float) ($operacao['atualizar_correcao_monetaria'] ?? 100) / 100;
+        $juros_pct_mensal = (float) ($operacao['atualizar_juros_nominais'] ?? 0) / 100;
+        $dia_debito = (int) ($operacao['atualizar_dia_debito'] ?? 1);
+        $data_fim = new DateTime($operacao['atualizar_ate'] ?? date('Y-m-d'));
+
+        $divisor_juros = $operacao['divisor_juros'] ?? 30;
+        $tipo_juros = $operacao['tipo_juros'] ?? 'composto';
+        $valores_negativos = $operacao['valores_negativos'] ?? 0;
+        $corrigir_saldos = $operacao['corrigir_saldos'] ?? 0;
+        $indexador_mensal = $operacao['indexador_mensal'] ?? 'mes_anterior';
+
+        // Processar lançamentos
+        $lancamentos = [];
+        while ($row = $lancamentos_result->fetch_assoc()) {
+            $lancamentos[] = $row;
+        }
+
+        usort($lancamentos, fn($a, $b) => strtotime($a['data']) - strtotime($b['data']));
+
+        $data_inicio = null;
+        $saldo = 0.0;
+
+        foreach ($lancamentos as $l) {
+            $data_lanc = new DateTime($l['data']);
+            $valor = (float) $l['valor'];
+
+            if (strtolower($l['tipo']) === 'debito') {
+                if ($data_inicio === null) $data_inicio = clone $data_lanc;
+                $saldo -= $valor;
+            } else {
+                $saldo += $valor;
+            }
+
             $extrato[] = [
                 'data' => $data_lanc->format('d/m/Y'),
                 'descricao' => $l['descricao'],
-                'debito' => 0,
-                'credito' => $valor,
+                'debito' => strtolower($l['tipo']) === 'debito' ? -$valor : 0,
+                'credito' => strtolower($l['tipo']) === 'credito' ? $valor : 0,
                 'saldo' => $saldo,
                 'indice' => '',
                 'dias_corridos' => 0
             ];
         }
-    }
 
-    // 3. Calcular totais de movimentação
-    foreach ($extrato as $item) {
-        $totais['movimentacao'] += $item['credito'] + $item['debito'];
-    }
-
-    // 4. Gerar datas para correção monetária
-    $datas_correcao = [];
-    $data_corr = DateTime::createFromFormat('Y-m-d', $data_inicio->format('Y-m-') . str_pad($dia_debito, 2, '0', STR_PAD_LEFT));
-    if ($data_corr < $data_inicio) {
-        switch ($periodicidade) {
-            case 'Mensal': $data_corr->modify('+1 month'); break;
-            case 'Trimestral': $data_corr->modify('+3 months'); break;
-            case 'Semestral': $data_corr->modify('+6 months'); break;
-            case 'Anual': $data_corr->modify('+1 year'); break;
-            default: $data_corr->modify('+1 month');
-        }
-    }
-    while ($data_corr < $data_fim) {
-        $datas_correcao[] = clone $data_corr;
-        switch ($periodicidade) {
-            case 'Mensal': $data_corr->modify('+1 month'); break;
-            case 'Trimestral': $data_corr->modify('+3 months'); break;
-            case 'Semestral': $data_corr->modify('+6 months'); break;
-            case 'Anual': $data_corr->modify('+1 year'); break;
-            default: $data_corr->modify('+1 month');
-        }
-    }
-    $datas_correcao[] = clone $data_fim;
-
-    // 5. Função auxiliar para cálculo de dias corridos
-    $dias_corridos = fn($inicio, $fim) => $inicio->diff($fim)->days + 1;
-
-    // 6. Aplicar correção monetária e juros
-    $data_ant = clone $data_inicio;
-    foreach ($datas_correcao as $dt_corr) {
-        $dias = $dias_corridos($data_ant, $dt_corr);
-
-        $indice = obter_indice_dias_corridos($mysqli, $indexador, $data_ant, $dt_corr);
-
-        if ($correcao_pct > 0) {
-            $correcao = abs($saldo) * ($indice / 100) * $correcao_pct;
-            $saldo -= $correcao;
-            $totais['correcao'] -= $correcao; // Acumula como negativo
-            $extrato[] = [
-                'data' => $dt_corr->format('d/m/Y'),
-                'descricao' => ($dt_corr == $data_fim ? 'Correção Final' : 'Correção Monetária'),
-                'debito' => -$correcao,
-                'credito' => 0,
-                'saldo' => $saldo,
-                'indice' => number_format($indice, 4) . '%',
-                'dias_corridos' => $dias
-            ];
+        if ($data_inicio === null) {
+            return array_merge($totais, ['extrato_detalhado' => $extrato]);
         }
 
-        if ($juros_pct_mensal > 0 && $dt_corr > $data_ant) {
-            $dias_base = 30.44;
-            $taxa_dia = pow(1 + $juros_pct_mensal, 1 / $dias_base) - 1;
-            $juros = abs($saldo) * (pow(1 + $taxa_dia, $dias) - 1);
-            $saldo -= $juros;
-            $totais['juros'] += $juros;
-            $extrato[] = [
-                'data' => $dt_corr->format('d/m/Y'),
-                'descricao' => 'Juros Nominais Compostos',
-                'debito' => -$juros,
-                'credito' => 0,
-                'saldo' => $saldo,
-                'indice' => number_format($taxa_dia * 100, 6) . '% a.d.',
-                'dias_corridos' => $dias
-            ];
+        // Datas de correção
+        $datas_correcao = [];
+        $data_corr = DateTime::createFromFormat('Y-m-d', $data_inicio->format('Y-m-') . str_pad($dia_debito, 2, '0', STR_PAD_LEFT));
+        if ($data_corr < $data_inicio) $data_corr->modify('+1 ' . getPeriodicidadeModifier($periodicidade));
+        while ($data_corr <= $data_fim) {
+            $datas_correcao[] = clone $data_corr;
+            $data_corr->modify('+1 ' . getPeriodicidadeModifier($periodicidade));
         }
 
-        $data_ant = clone $dt_corr;
-    }
+        $data_ant = clone $data_inicio;
+        foreach ($datas_correcao as $dt_corr) {
+            if ($dt_corr < $data_ant) continue;
 
-    // 7. Aplicar multa e honorários
-    if (!empty($operacao['valor_multa']) && $operacao['valor_multa'] > 0) {
-        $saldo -= $operacao['valor_multa'];
-        $totais['multa'] = $operacao['valor_multa'];
-        $extrato[] = [
-            'data' => $data_fim->format('d/m/Y'),
-            'descricao' => 'Multa',
-            'debito' => -$operacao['valor_multa'],
-            'credito' => 0,
-            'saldo' => $saldo,
-            'indice' => 'Valor Fixo',
-            'dias_corridos' => 0
-        ];
-    }
-    if (!empty($operacao['valor_honorarios']) && $operacao['valor_honorarios'] > 0) {
-        $saldo -= $operacao['valor_honorarios'];
-        $totais['honorarios'] = $operacao['valor_honorarios'];
-        $extrato[] = [
-            'data' => $data_fim->format('d/m/Y'),
-            'descricao' => 'Honorários',
-            'debito' => -$operacao['valor_honorarios'],
-            'credito' => 0,
-            'saldo' => $saldo,
-            'indice' => 'Valor Fixo',
-            'dias_corridos' => 0
-        ];
-    }
+            $dias = calcularDias($data_ant, $dt_corr, getTipoDiasPorIndexador($indexador));
+            if ($dias <= 0) continue;
 
-    $totais['saldo_atualizado'] = $saldo;
+            $indice = obter_indice_periodo($mysqli, $data_ant, $dt_corr, $indexador, $indexador_mensal);
 
-    return array_merge($totais, ['extrato_detalhado' => $extrato]);
+            // Correção monetária
+            if ($correcao_pct > 0 && abs($saldo) > 0.01) {
+                $fator_correcao = 1 + ($indice / 100) * $correcao_pct;
+                if (!$valores_negativos && $indice < 0) $fator_correcao = 1;
+
+                $correcao = $saldo * ($fator_correcao - 1);
+                $saldo += $correcao;
+                $totais['correcao'] += $correcao;
+
+                $extrato[] = [
+                    'data' => $dt_corr->format('d/m/Y'),
+                    'descricao' => $dt_corr == $data_fim ? 'Correção Final' : 'Correção Monetária',
+                    'debito' => $correcao < 0 ? $correcao : 0,
+                    'credito' => $correcao > 0 ? $correcao : 0,
+                    'saldo' => $saldo,
+                    'indice' => number_format($indice, 4) . '%',
+                    'dias_corridos' => $dias
+                ];
+            }
+
+            // Juros
+            if ($juros_pct_mensal > 0 && $saldo < 0) {
+                if ($tipo_juros === 'composto') {
+                    $taxa_diaria = pow(1 + $juros_pct_mensal, 1 / $divisor_juros) - 1;
+                    $juros = abs($saldo) * (pow(1 + $taxa_diaria, $dias) - 1);
+                } else {
+                    $juros = abs($saldo) * $juros_pct_mensal * ($dias / $divisor_juros);
+                }
+
+                $saldo -= $juros;
+                $totais['juros'] += $juros;
+
+                $extrato[] = [
+                    'data' => $dt_corr->format('d/m/Y'),
+                    'descricao' => $tipo_juros === 'composto' ? 'Juros Compostos' : 'Juros Simples',
+                    'debito' => -$juros,
+                    'credito' => 0,
+                    'saldo' => $saldo,
+                    'indice' => number_format($juros_pct_mensal * 100, 3) . '% a.m.',
+                    'dias_corridos' => $dias
+                ];
+            }
+
+            $data_ant = clone $dt_corr;
+        }
+
+        // Multa e honorários
+        if ($saldo < 0) {
+            $multa = (float) ($operacao['valor_multa'] ?? 0);
+            $honorarios = (float) ($operacao['valor_honorarios'] ?? 0);
+
+            if ($multa > 0) {
+                $saldo -= $multa;
+                $totais['multa'] = $multa;
+                $extrato[] = [
+                    'data' => $data_fim->format('d/m/Y'),
+                    'descricao' => 'Multa',
+                    'debito' => -$multa,
+                    'credito' => 0,
+                    'saldo' => $saldo,
+                    'indice' => 'Valor Fixo',
+                    'dias_corridos' => 0
+                ];
+            }
+
+            if ($honorarios > 0) {
+                $saldo -= $honorarios;
+                $totais['honorarios'] = $honorarios;
+                $extrato[] = [
+                    'data' => $data_fim->format('d/m/Y'),
+                    'descricao' => 'Honorários',
+                    'debito' => -$honorarios,
+                    'credito' => 0,
+                    'saldo' => $saldo,
+                    'indice' => 'Valor Fixo',
+                    'dias_corridos' => 0
+                ];
+            }
+        }
+
+        $totais['saldo_atualizado'] = $saldo;
+        $totais['movimentacao'] = array_reduce($extrato, fn($carry, $item) => $carry + $item['debito'] + $item['credito'], 0);
+
+        return array_merge($totais, ['extrato_detalhado' => $extrato]);
+
+    } catch (Exception $e) {
+        error_log("Erro ao calcular operação: " . $e->getMessage());
+        return array_merge($totais, ['extrato_detalhado' => $extrato, 'erro' => $e->getMessage()]);
+    }
 }
 
-function obter_indice_dias_corridos($mysqli, $indexador, $inicio, $fim) {
-    $indice_total = 0.0;
-    $data_atual = clone $inicio;
-    $data_fim = clone $fim;
+// Consulta de índice real no banco:
+function obter_indice_periodo($mysqli, $data_inicio, $data_fim, $indexador, $modo = 'mes_anterior') {
+    $inicio = $data_inicio->format('Y-m-d');
+    $fim = $data_fim->format('Y-m-d');
 
-    while ($data_atual < $data_fim) {
-        $ano = $data_atual->format('Y');
-        $mes = $data_atual->format('m');
+    $query = "SELECT SUM(valor) AS total 
+              FROM indices 
+              WHERE nome = ? 
+              AND data_referencia BETWEEN ? AND ?";
+    $stmt = $mysqli->prepare($query);
+    $stmt->bind_param("sss", $indexador, $inicio, $fim);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $row = $res->fetch_assoc();
 
-        $primeiro_dia_mes = new DateTime("$ano-$mes-01");
-        $ultimo_dia_mes = (clone $primeiro_dia_mes)->modify('last day of this month');
-
-        $inicio_periodo = clone $data_atual;
-        $fim_periodo = $data_fim < $ultimo_dia_mes ? $data_fim : clone $ultimo_dia_mes;
-
-        $dias_periodo = $inicio_periodo->diff($fim_periodo)->days + 1;
-        $dias_mes = $primeiro_dia_mes->diff($ultimo_dia_mes)->days + 1;
-
-        $stmt = $mysqli->prepare("SELECT valor FROM indices WHERE nome = ? AND data_referencia = ?");
-        $data_ref = $primeiro_dia_mes->format('Y-m-01');
-        $stmt->bind_param("ss", $indexador, $data_ref);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-
-        $indice_mes = $row['valor'] ?? 0.0;
-
-        $indice_total += $indice_mes * ($dias_periodo / $dias_mes);
-
-        $data_atual = (clone $ultimo_dia_mes)->modify('+1 day');
-    }
-    return $indice_total;
+    return (float) ($row['total'] ?? 0);
 }
+
+// As demais funções auxiliares permanecem iguais (getPeriodicidadeModifier, calcularDias, etc.)
+
+
+// Funções auxiliares (devem estar no mesmo arquivo ou em um include)
+
+function getPeriodicidadeModifier($periodicidade) {
+    switch ($periodicidade) {
+        case 'Trimestral': return '3 months';
+        case 'Semestral': return '6 months';
+        case 'Anual': return '1 year';
+        default: return '1 month'; // Mensal
+    }
+}
+
+function getTipoDiasPorIndexador($indexador) {
+    $tipos = [
+        'CDI' => 'uteis',
+        'CDI (CETIP) Diário' => 'uteis',
+        'SELIC' => 'corridos',
+        'IPCA' => 'mes_completo',
+        'INPC' => 'mes_completo',
+        'IGP-M' => 'mes_completo',
+        'TR' => 'corridos'
+    ];
+    return $tipos[$indexador] ?? 'corridos';
+}
+
+function calcularDias($inicio, $fim, $tipo = 'corridos') {
+    switch ($tipo) {
+        case 'uteis':
+            return calcularDiasUteis($inicio, $fim);
+        case 'mes_completo':
+            return calcularDiasMesCompleto($inicio, $fim);
+        default:
+            return $inicio->diff($fim)->days;
+    }
+}
+
+function calcularDiasUteis($inicio, $fim) {
+    $diasUteis = 0;
+    $periodo = new DatePeriod(
+        $inicio,
+        new DateInterval('P1D'),
+        $fim->modify('+1 day') // Inclui o dia final
+    );
+    
+    foreach ($periodo as $data) {
+        $diaSemana = $data->format('N');
+        if ($diaSemana < 6) { // 1-5 = segunda a sexta
+            $diasUteis++;
+        }
+    }
+    return $diasUteis;
+}
+
+function calcularDiasMesCompleto($inicio, $fim) {
+    $diasMes = cal_days_in_month(CAL_GREGORIAN, $inicio->format('m'), $inicio->format('Y'));
+    $diasPeriodo = $inicio->diff($fim)->days + 1;
+    return $diasPeriodo / $diasMes; // Retorna fração do mês
+}
+
+?>
