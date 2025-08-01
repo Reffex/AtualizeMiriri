@@ -2,12 +2,32 @@
 require_once '../../includes/auto_check.php';
 require_once '../../includes/connect_app.php';
 
-function normalizarNumero($valor)
-{
+function normalizarNumero($valor) {
     if (is_string($valor)) {
         $valor = str_replace(['.', ','], ['', '.'], $valor);
     }
     return $valor;
+}
+
+function existeDebitoNaOperacao($mysqli, $operacao_id) {
+    $stmt = $mysqli->prepare("SELECT COUNT(*) as total FROM lancamentos WHERE operacao_id = ? AND tipo = 'debito'");
+    if (!$stmt) {
+        error_log("Erro na preparação: " . $mysqli->error);
+        return false;
+    }
+    
+    $stmt->bind_param("i", $operacao_id);
+    if (!$stmt->execute()) {
+        error_log("Erro na execução: " . $stmt->error);
+        $stmt->close();
+        return false;
+    }
+    
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+    
+    return $row['total'] > 0;
 }
 
 $id = $_GET['id'] ?? null;
@@ -181,16 +201,6 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="../../assets/css/styles.css">
-    <script>
-        setTimeout(function() {
-            const msg = document.getElementById('alerta-msg');
-            if (msg) {
-                msg.style.transition = 'opacity 1s';
-                msg.style.opacity = 0;
-                setTimeout(() => msg.remove(), 1000);
-            }
-        }, 3000);
-    </script>
     <title>Atualize Miriri</title>
 </head>
 
@@ -312,6 +322,7 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
 
             <div class="button-group">
                 <button type="submit" class="btn-criar">Salvar alterações</button>
+                <button type="button" onclick="document.getElementById('parametrosModal').style.display = 'flex'" class="btn-criar">Parâmetros da Operação</button>
             </div>
         </form>
 
@@ -487,6 +498,82 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
         </div>
     </div>
 
+    <!-- Modal de Parâmetros da Operação -->
+    <div id="parametrosModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <h3>Parâmetros da operação</h3>
+
+            <div style="margin-bottom: 5px;">
+                <label><strong>Divisor de Juros</strong></label><br>
+                <input type="radio" id="ano360" name="divisor_juros" value="360" <?= ($op['divisor_juros'] ?? 365) == 360 ? 'checked' : '' ?>>
+                <label for="ano360">Ano com 360 dias</label><br>
+                <input type="radio" id="ano365" name="divisor_juros" value="365" <?= ($op['divisor_juros'] ?? 365) == 365 ? 'checked' : '' ?>>
+                <label for="ano365">Ano com 365 dias</label>
+            </div>
+
+            <div style="margin-bottom: 5px;">
+                <label><strong>Tipo de Juros</strong></label><br>
+                <input type="radio" id="juros_simples" name="tipo_juros" value="simples" <?= ($op['tipo_juros'] ?? 'composto') == 'simples' ? 'checked' : '' ?>>
+                <label for="juros_simples">Simples</label><br>
+                <input type="radio" id="juros_composto" name="tipo_juros" value="composto" <?= ($op['tipo_juros'] ?? 'composto') == 'composto' ? 'checked' : '' ?>>
+                <label for="juros_composto">Composto</label>
+            </div>
+
+            <div style="margin-bottom: 5px;">
+                <label><strong>Tipo de Lançamento</strong></label><br>
+                <input type="radio" id="moeda_original" name="tipo_lancamento" value="original" <?= ($op['tipo_lancamento'] ?? 'reais') == 'original' ? 'checked' : '' ?>>
+                <label for="moeda_original">Em moeda original</label><br>
+                <input type="radio" id="moeda_reais" name="tipo_lancamento" value="reais" <?= ($op['tipo_lancamento'] ?? 'reais') == 'reais' ? 'checked' : '' ?>>
+                <label for="moeda_reais">Em reais</label>
+            </div>
+
+            <div style="margin-bottom: 5px;">
+                <label><strong>Modo de Operação</strong></label><br>
+                <input type="radio" id="modo_outros" name="modo_operacao" value="outros" <?= ($op['modo_operacao'] ?? 'credito_rural') == 'outros' ? 'checked' : '' ?>>
+                <label for="modo_outros">Outros</label><br>
+                <input type="radio" id="modo_credito_rural" name="modo_operacao" value="credito_rural" <?= ($op['modo_operacao'] ?? 'credito_rural') == 'credito_rural' ? 'checked' : '' ?>>
+                <label for="modo_credito_rural">Crédito Rural</label>
+            </div>
+
+            <div style="margin-bottom: 5px;">
+                <label><strong>Resolução 2.471?</strong></label><br>
+                <input type="radio" id="resolucao_sim" name="resolucao_2471" value="1" <?= ($op['resolucao_2471'] ?? 0) == 1 ? 'checked' : '' ?>>
+                <label for="resolucao_sim">Sim</label><br>
+                <input type="radio" id="resolucao_nao" name="resolucao_2471" value="0" <?= ($op['resolucao_2471'] ?? 0) == 0 ? 'checked' : '' ?>>
+                <label for="resolucao_nao">Não</label>
+            </div>
+
+            <div style="margin-bottom: 5px;">
+                <label><strong>Indexadores mensais</strong></label><br>
+                <input type="radio" id="indexador_mes_atual" name="indexador_mensal" value="mes_atual" <?= ($op['indexador_mensal'] ?? 'mes_anterior') == 'mes_atual' ? 'checked' : '' ?>>
+                <label for="indexador_mes_atual">Utilizar próprio mês</label><br>
+                <input type="radio" id="indexador_mes_anterior" name="indexador_mensal" value="mes_anterior" <?= ($op['indexador_mensal'] ?? 'mes_anterior') == 'mes_anterior' ? 'checked' : '' ?>>
+                <label for="indexador_mes_anterior">Utilizar mês anterior</label>
+            </div>
+
+            <div style="margin-bottom: 5px;">
+                <label><strong>Não utilizar valores negativos (deflação)?</strong></label><br>
+                <input type="radio" id="valores_negativos_sim" name="valores_negativos" value="1" <?= ($op['valores_negativos'] ?? 0) == 1 ? 'checked' : '' ?>>
+                <label for="valores_negativos_sim">Sim</label><br>
+                <input type="radio" id="valores_negativos_nao" name="valores_negativos" value="0" <?= ($op['valores_negativos'] ?? 0) == 0 ? 'checked' : '' ?>>
+                <label for="valores_negativos_nao">Não</label>
+            </div>
+
+            <div style="margin-bottom: 5px;">
+                <label><strong>Corrigir apenas os saldos devedores (Conta Corrente)?</strong></label><br>
+                <input type="radio" id="corrigir_saldos_sim" name="corrigir_saldos" value="1" <?= ($op['corrigir_saldos'] ?? 0) == 1 ? 'checked' : '' ?>>
+                <label for="corrigir_saldos_sim">Sim</label><br>
+                <input type="radio" id="corrigir_saldos_nao" name="corrigir_saldos" value="0" <?= ($op['corrigir_saldos'] ?? 0) == 0 ? 'checked' : '' ?>>
+                <label for="corrigir_saldos_nao">Não</label>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" onclick="document.getElementById('parametrosModal').style.display = 'none'" class="modal-button modal-cancel">Cancelar</button>
+                <button type="button" onclick="salvarParametros()" class="modal-button modal-save">Salvar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Função para formatar valores monetários
         function formatarValor(input) {
@@ -567,8 +654,77 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
             if (event.target === document.getElementById('editModal')) {
                 document.getElementById('editModal').style.display = 'none';
             }
+            if (event.target === document.getElementById('parametrosModal')) {
+                document.getElementById('parametrosModal').style.display = 'none';
+            }
+        });
+
+        // Auto-fechar mensagens de alerta
+        setTimeout(function() {
+            const msg = document.getElementById('alerta-msg');
+            if (msg) {
+                msg.style.transition = 'opacity 1s';
+                msg.style.opacity = 0;
+                setTimeout(() => msg.remove(), 1000);
+            }
+        }, 3000);
+
+        // Função para salvar parâmetros
+        function salvarParametros() {
+            const formData = new FormData();
+            formData.append('id', <?= $id ?>);
+            formData.append('divisor_juros', document.querySelector('input[name="divisor_juros"]:checked').value);
+            formData.append('tipo_juros', document.querySelector('input[name="tipo_juros"]:checked').value);
+            formData.append('tipo_lancamento', document.querySelector('input[name="tipo_lancamento"]:checked').value);
+            formData.append('modo_operacao', document.querySelector('input[name="modo_operacao"]:checked').value);
+            formData.append('resolucao_2471', document.querySelector('input[name="resolucao_2471"]:checked').value);
+            formData.append('indexador_mensal', document.querySelector('input[name="indexador_mensal"]:checked').value);
+            formData.append('valores_negativos', document.querySelector('input[name="valores_negativos"]:checked').value);
+            formData.append('corrigir_saldos', document.querySelector('input[name="corrigir_saldos"]:checked').value);
+
+            fetch('../../includes/salvar_parametros.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Parâmetros salvos com sucesso!');
+                    document.getElementById('parametrosModal').style.display = 'none';
+                    location.reload();
+                } else {
+                    alert('Erro ao salvar parâmetros: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Erro ao salvar parâmetros');
+            });
+        }
+
+        // Validação do primeiro débito
+        document.getElementById('formNovoLancamento').addEventListener('submit', function(e) {
+            const tipo = this.querySelector('select[name="tipo"]').value;
+            const existeDebito = <?= existeDebitoNaOperacao($mysqli, $id) ? 'true' : 'false' ?>;
+            
+            if (!existeDebito && tipo !== 'debito') {
+                alert('ATENÇÃO: O primeiro lançamento deve ser um DÉBITO');
+                e.preventDefault();
+                return false;
+            }
+            
+            // Validação adicional para valor positivo
+            const valorInput = this.querySelector('input[name="valor"]');
+            const valor = parseFloat(valorInput.value.replace(',', '.'));
+            
+            if (isNaN(valor) || valor <= 0) {
+                alert('O valor deve ser um número positivo!');
+                e.preventDefault();
+                return false;
+            }
+            
+            return true;
         });
     </script>
 </body>
-
 </html>
