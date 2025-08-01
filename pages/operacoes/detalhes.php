@@ -274,7 +274,7 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
             <div class="form-row">
                 <div class="form-item">
                     <label for="alterar_taxas_em" style="color: white;">Alterar taxas em:</label>
-                    <input type="date" name="alterar_taxas_em" id="alterar_taxas_em" value="<?= $op['alterar_taxas_em'] ?>" required>
+                    <input type="date" name="alterar_taxas_em" id="alterar_taxas_em" value="<?= !empty($op['alterar_taxas_em']) ? $op['alterar_taxas_em'] : date('Y-m-d') ?>" required>
                 </div>
                 <div class="form-item">
                     <label for="alterar_dia_debito" style="color: white;">Dia do Débito:</label>
