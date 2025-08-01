@@ -51,7 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
 
         $stmt->bind_param(
-            "isddssiddsidddss",
+            "issdssidssidddss",
             $cliente_id,
             $identificador,
             $indexador,
@@ -219,17 +219,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const hoje = new Date();
+            const dia = String(hoje.getDate()).padStart(2, '0');
             const mes = String(hoje.getMonth() + 1).padStart(2, '0');
             const ano = hoje.getFullYear();
+            const dataHoje = `${ano}-${mes}-${dia}`;
 
-            const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
-            document.getElementById('atualizar_ate').value = `${ano}-${mes}-${String(ultimoDiaMes).padStart(2, '0')}`;
-
-            const seisMesesAFrente = new Date(hoje);
-            seisMesesAFrente.setMonth(hoje.getMonth() + 6);
-            const mesFuturo = String(seisMesesAFrente.getMonth() + 1).padStart(2, '0');
-            const anoFuturo = seisMesesAFrente.getFullYear();
-            document.getElementById('alterar_taxas_em').value = `${anoFuturo}-${mesFuturo}-01`;
+            document.getElementById('atualizar_ate').value = dataHoje;
+            document.getElementById('alterar_taxas_em').value = dataHoje;
         });
     </script>
 
