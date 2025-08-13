@@ -1,6 +1,11 @@
 <?php
 function obter_indice($mysqli, $indexador, $data)
 {
+    // Converter DateTime para string se necessário
+    if ($data instanceof DateTime) {
+        $data = $data->format('Y-m-d');
+    }
+
     $stmt = $mysqli->prepare("SELECT valor FROM indices WHERE nome = ? AND data_referencia <= ? ORDER BY data_referencia DESC LIMIT 1");
     $stmt->bind_param("ss", $indexador, $data);
     $stmt->execute();
@@ -18,7 +23,6 @@ function atualizar_indices($mysqli)
     $urls = [
         'IPCA'  => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados?formato=json',
         'CDI (CETIP) Diário'   => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.12/dados?formato=json&dataInicial=' . date('d/m/Y', strtotime('-10 years')),
-        'SELIC' => 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.4390/dados?formato=json'
     ];
 
     $mensagem = '';
@@ -70,4 +74,135 @@ function atualizar_indices($mysqli)
     }
 
     return $mensagem;
+}
+
+function obter_indice_periodo($mysqli, $data_inicio, $data_fim, $indexador)
+{
+    if (!($data_inicio instanceof DateTime)) {
+        $data_inicio = new DateTime($data_inicio);
+    }
+    if (!($data_fim instanceof DateTime)) {
+        $data_fim = new DateTime($data_fim);
+    }
+
+    $data_inicio_str = $data_inicio->format('Y-m-d');
+    $data_fim_str = $data_fim->format('Y-m-d');
+
+    if (stripos($indexador, 'CDI') !== false) {
+        // Para CDI, somar diariamente (excluindo fins de semana)
+        $query = "SELECT valor FROM indices 
+                  WHERE nome = ? AND data_referencia BETWEEN ? AND ? 
+                  AND DAYOFWEEK(data_referencia) NOT IN (1,7)";
+        $stmt = $mysqli->prepare($query);
+        $stmt->bind_param("sss", $indexador, $data_inicio_str, $data_fim_str);
+        $stmt->execute();
+        $res = $stmt->get_result();
+
+        $fator = 1.0;
+        while ($row = $res->fetch_assoc()) {
+            $cdi = (float)$row['valor'];
+            $fator *= (1 + $cdi / 100);
+        }
+        return ($fator - 1) * 100; // retorna percentual acumulado
+    } elseif (stripos($indexador, 'IPCA') !== false) {
+        // Para IPCA, pegar valor mensal do mês anterior à data_fim
+        $mes_ref = (clone $data_fim)->modify('first day of previous month')->format('Y-m-d');
+
+        $query = "SELECT valor FROM indices 
+              WHERE nome = ? AND data_referencia = ? LIMIT 1";
+        $stmt = $mysqli->prepare($query);
+        $stmt->bind_param("ss", $indexador, $mes_ref);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $row = $res->fetch_assoc();
+        $ipca_mensal = (float)($row['valor'] ?? 0.0);
+
+        // Calcular dias do período e dias no mês
+        $dias_no_mes = $data_fim->format('t'); // Total de dias no mês atual
+        $dias_periodo = $data_inicio->diff($data_fim)->days + 1;
+
+        // Aplicar correção proporcional se o período for menor que um mês
+        if ($dias_periodo < $dias_no_mes) {
+            $fator_correcao = pow(1 + ($ipca_mensal / 100), ($dias_periodo / $dias_no_mes));
+            return ($fator_correcao - 1) * 100;
+        } else {
+            return $ipca_mensal; // Retorna o IPCA completo
+        }
+    }
+    return 0.0; // Se o índice não for reconhecido
+}
+
+function calcular_dias_uteis($inicio, $fim, $mysqli = null)
+{
+    if (!($inicio instanceof DateTime)) {
+        $inicio = new DateTime($inicio);
+    }
+    if (!($fim instanceof DateTime)) {
+        $fim = new DateTime($fim);
+    }
+
+    $dias_uteis = 0;
+    $data = clone $inicio;
+
+    while ($data <= $fim) {
+        $dia_semana = $data->format('N'); // 1 (segunda) a 7 (domingo)
+        if ($dia_semana < 6) { // Considera apenas seg-sex
+            $dias_uteis++;
+        }
+        $data->modify('+1 day');
+    }
+
+    return $dias_uteis;
+}
+
+function calcular_dias_corridos($data_inicio, $data_fim, $indexador, $mysqli)
+{
+    if (!($data_inicio instanceof DateTime)) {
+        $data_inicio = new DateTime($data_inicio);
+    }
+    if (!($data_fim instanceof DateTime)) {
+        $data_fim = new DateTime($data_fim);
+    }
+
+    if (stripos($indexador, 'CDI') !== false) {
+        // Contar somente os dias úteis que realmente têm CDI na base
+        $query = "SELECT COUNT(*) as total 
+                  FROM indices 
+                  WHERE nome = ? 
+                    AND data_referencia BETWEEN ? AND ?
+                    AND DAYOFWEEK(data_referencia) NOT IN (1, 7)";
+        $stmt = $mysqli->prepare($query);
+        $inicio_str = $data_inicio->format('Y-m-d');
+        $fim_str = $data_fim->format('Y-m-d');
+        $stmt->bind_param("sss", $indexador, $inicio_str, $fim_str);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $row = $res->fetch_assoc();
+        return (int)($row['total'] ?? 0);
+    }
+
+    // Agora com segurança
+    return $data_inicio->diff($data_fim)->days;
+}
+
+function calcular_dias_uteis_entre_datas($data_inicio, $data_fim)
+{
+    if (!($data_inicio instanceof DateTime)) {
+        $data_inicio = new DateTime($data_inicio);
+    }
+    if (!($data_fim instanceof DateTime)) {
+        $data_fim = new DateTime($data_fim);
+    }
+
+    $dias = 0;
+    $intervalo = DateInterval::createFromDateString('1 day');
+    $periodo = new DatePeriod($data_inicio, $intervalo, $data_fim);
+
+    foreach ($periodo as $data) {
+        $dia_semana = (int)$data->format('N'); // 1 = Segunda, 7 = Domingo
+        if ($dia_semana < 6) { // Conta apenas de segunda a sexta
+            $dias++;
+        }
+    }
+    return $dias;
 }
