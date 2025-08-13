@@ -67,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             </div>
 
             <div class="remember-forgot">
-                <label><input type="checkbox"> Lembrar Senha</label>
+                <label><input type="checkbox">Lembrar Senha</label>
                 <a href="forgot.php">Esqueci a senha</a>
             </div>
 
