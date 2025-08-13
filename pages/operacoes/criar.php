@@ -26,32 +26,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $atualizar_correcao_monetaria = normalizarNumero($_POST['atualizar_correcao_monetaria']);
         $atualizar_juros_nominais = normalizarNumero($_POST['atualizar_juros_nominais']);
 
-        $alterar_taxas_em = $_POST['alterar_taxas_em'];
-        $alterar_dia_debito = (int) $_POST['alterar_dia_debito'];
-        $alterar_correcao_monetaria = normalizarNumero($_POST['alterar_correcao_monetaria']);
-        $alterar_juros_nominais = normalizarNumero($_POST['alterar_juros_nominais']);
-
         $valor_multa = ($_POST['valor_multa'] !== '') ? normalizarNumero($_POST['valor_multa']) : 0.0;
         $valor_honorarios = ($_POST['valor_honorarios'] !== '') ? normalizarNumero($_POST['valor_honorarios']) : 0.0;
         $observacao = trim($_POST['observacao']);
 
-        if (strtotime($atualizar_ate) === false || strtotime($alterar_taxas_em) === false) {
+        if (strtotime($atualizar_ate) === false) {
             throw new Exception("Datas inválidas informadas");
         }
 
         $stmt = $mysqli->prepare("INSERT INTO operacoes (
     cliente_id, identificador, indexador, periodicidade,
     atualizar_ate, atualizar_dia_debito, atualizar_correcao_monetaria, atualizar_juros_nominais,
-    alterar_taxas_em, alterar_dia_debito, alterar_correcao_monetaria, alterar_juros_nominais,
     valor_multa, valor_honorarios, observacao, data_criacao
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
         if (!$stmt) {
             throw new Exception("Erro na preparação da query: " . $mysqli->error);
         }
 
         $stmt->bind_param(
-            "issdssidssidddss",
+            "issdssidddss",
             $cliente_id,
             $identificador,
             $indexador,
@@ -60,10 +54,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $atualizar_dia_debito,
             $atualizar_correcao_monetaria,
             $atualizar_juros_nominais,
-            $alterar_taxas_em,
-            $alterar_dia_debito,
-            $alterar_correcao_monetaria,
-            $alterar_juros_nominais,
             $valor_multa,
             $valor_honorarios,
             $observacao,
@@ -132,19 +122,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <div class="form-item">
                     <label for="indexador">Indexador:</label>
                     <select name="indexador" id="indexador" required>
-                        <option value="SELIC">SELIC</option>
                         <option value="CDI (CETIP) Diário">CDI (CETIP) Diário</option>
                         <option value="IPCA">IPCA</option>
-                        <option value="INPC">INPC</option>
                     </select>
                 </div>
                 <div class="form-item">
                     <label for="periodicidade">Periodicidade:</label>
                     <select name="periodicidade" id="periodicidade" required>
                         <option value="Mensal" selected>Mensal</option>
-                        <option value="Trimestral">Trimestral</option>
-                        <option value="Semestral">Semestral</option>
-                        <option value="Anual">Anual</option>
                     </select>
                 </div>
             </div>
@@ -170,25 +155,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
             </div>
 
-            <!-- Alterar taxas em -->
-            <div class="form-row">
-                <div class="form-item">
-                    <label for="alterar_taxas_em">Alterar taxas em:</label>
-                    <input type="date" name="alterar_taxas_em" id="alterar_taxas_em" required>
-                </div>
-                <div class="form-item">
-                    <label for="alterar_dia_debito">Dia do Débito:</label>
-                    <input type="number" name="alterar_dia_debito" id="alterar_dia_debito" value="1" min="1" max="31" required>
-                </div>
-                <div class="form-item">
-                    <label for="alterar_correcao_monetaria">Correção monetária (%):</label>
-                    <input type="text" step="0.001" name="alterar_correcao_monetaria" id="alterar_correcao_monetaria" value="100,000" pattern="^[0-9]+([,\.][0-9]+)?$" required>
-                </div>
-                <div class="form-item">
-                    <label for="alterar_juros_nominais">Juros nominais (%):</label>
-                    <input type="text" step="0.001" name="alterar_juros_nominais" id="alterar_juros_nominais" value="12,000" pattern="^[0-9]+([,\.][0-9]+)?$" required>
-                </div>
-            </div>
             <br><br>
 
             <!-- Multa e Honorários -->
@@ -225,7 +191,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             const dataHoje = `${ano}-${mes}-${dia}`;
 
             document.getElementById('atualizar_ate').value = dataHoje;
-            document.getElementById('alterar_taxas_em').value = dataHoje;
         });
     </script>
 
