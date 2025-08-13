@@ -2,31 +2,33 @@
 require_once '../../includes/auto_check.php';
 require_once '../../includes/connect_app.php';
 
-function normalizarNumero($valor) {
+function normalizarNumero($valor)
+{
     if (is_string($valor)) {
         $valor = str_replace(['.', ','], ['', '.'], $valor);
     }
     return $valor;
 }
 
-function existeDebitoNaOperacao($mysqli, $operacao_id) {
+function existeDebitoNaOperacao($mysqli, $operacao_id)
+{
     $stmt = $mysqli->prepare("SELECT COUNT(*) as total FROM lancamentos WHERE operacao_id = ? AND tipo = 'debito'");
     if (!$stmt) {
         error_log("Erro na preparação: " . $mysqli->error);
         return false;
     }
-    
+
     $stmt->bind_param("i", $operacao_id);
     if (!$stmt->execute()) {
         error_log("Erro na execução: " . $stmt->error);
         $stmt->close();
         return false;
     }
-    
+
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
     $stmt->close();
-    
+
     return $row['total'] > 0;
 }
 
@@ -62,7 +64,7 @@ $stmt->execute();
 $lancamentos = $stmt->get_result();
 
 // Calcular operação
-require_once '../../includes/calcular_operacao.php';
+require_once '../../includes/calcular_operacoes.php';
 $valores = calcular_operacao($mysqli, $op, $lancamentos);
 
 // Processar formulários
@@ -79,23 +81,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $atualizar_correcao_monetaria = normalizarNumero($_POST['atualizar_correcao_monetaria']);
             $atualizar_juros_nominais = normalizarNumero($_POST['atualizar_juros_nominais']);
 
-            $alterar_taxas_em = $_POST['alterar_taxas_em'];
-            $alterar_dia_debito = (int) $_POST['alterar_dia_debito'];
-            $alterar_correcao_monetaria = normalizarNumero($_POST['alterar_correcao_monetaria']);
-            $alterar_juros_nominais = normalizarNumero($_POST['alterar_juros_nominais']);
-
             $valor_multa = ($_POST['valor_multa'] !== '') ? normalizarNumero($_POST['valor_multa']) : 0.0;
             $valor_honorarios = ($_POST['valor_honorarios'] !== '') ? normalizarNumero($_POST['valor_honorarios']) : 0.0;
             $observacao = trim($_POST['observacao']);
 
-            if (strtotime($atualizar_ate) === false || strtotime($alterar_taxas_em) === false) {
-                throw new Exception("Datas inválidas informadas");
+            if (strtotime($atualizar_ate) === false) {
+                throw new Exception("Data de atualização inválida");
             }
 
             $stmt = $mysqli->prepare("UPDATE operacoes SET 
                 identificador = ?, indexador = ?, periodicidade = ?, 
                 atualizar_ate = ?, atualizar_dia_debito = ?, atualizar_correcao_monetaria = ?, atualizar_juros_nominais = ?, 
-                alterar_taxas_em = ?, alterar_dia_debito = ?, alterar_correcao_monetaria = ?, alterar_juros_nominais = ?, 
                 valor_multa = ?, valor_honorarios = ?, observacao = ?
                 WHERE id = ?
             ");
@@ -105,7 +101,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             }
 
             $stmt->bind_param(
-                "ssssiddsidddssi",
+                "ssssidddssi",
                 $identificador,
                 $indexador,
                 $periodicidade,
@@ -113,10 +109,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $atualizar_dia_debito,
                 $atualizar_correcao_monetaria,
                 $atualizar_juros_nominais,
-                $alterar_taxas_em,
-                $alterar_dia_debito,
-                $alterar_correcao_monetaria,
-                $alterar_juros_nominais,
                 $valor_multa,
                 $valor_honorarios,
                 $observacao,
@@ -225,7 +217,6 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
         <form method="POST" id="formEditarOperacao">
             <input type="hidden" name="editar_operacao" value="1">
 
-            <!-- Cliente e identificador -->
             <div class="form-row">
                 <div class="form-item">
                     <label for="cliente_nome" style="color: white;">Cliente:</label>
@@ -237,30 +228,23 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                 </div>
             </div>
 
-            <!-- Indexador e Periodicidade -->
             <div class="form-row">
                 <div class="form-item">
                     <label for="indexador" style="color: white;">Indexador:</label>
                     <select name="indexador" id="indexador" required>
-                        <option value="SELIC" <?= $op['indexador'] === 'SELIC' ? 'selected' : '' ?>>SELIC</option>
                         <option value="CDI (CETIP) Diário" <?= $op['indexador'] === 'CDI (CETIP) Diário' ? 'selected' : '' ?>>CDI (CETIP) Diário</option>
                         <option value="IPCA" <?= $op['indexador'] === 'IPCA' ? 'selected' : '' ?>>IPCA</option>
-                        <option value="INPC" <?= $op['indexador'] === 'INPC' ? 'selected' : '' ?>>INPC</option>
                     </select>
                 </div>
                 <div class="form-item">
                     <label for="periodicidade" style="color: white;">Periodicidade:</label>
                     <select name="periodicidade" id="periodicidade" required>
                         <option value="Mensal" <?= $op['periodicidade'] === 'Mensal' ? 'selected' : '' ?>>Mensal</option>
-                        <option value="Trimestral" <?= $op['periodicidade'] === 'Trimestral' ? 'selected' : '' ?>>Trimestral</option>
-                        <option value="Semestral" <?= $op['periodicidade'] === 'Semestral' ? 'selected' : '' ?>>Semestral</option>
-                        <option value="Anual" <?= $op['periodicidade'] === 'Anual' ? 'selected' : '' ?>>Anual</option>
                     </select>
                 </div>
             </div>
             <br><br>
 
-            <!-- Atualizar até -->
             <div class="form-row">
                 <div class="form-item">
                     <label for="atualizar_ate" style="color: white;">Atualizar até:</label>
@@ -280,29 +264,8 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                 </div>
             </div>
 
-            <!-- Alterar taxas em -->
-            <div class="form-row">
-                <div class="form-item">
-                    <label for="alterar_taxas_em" style="color: white;">Alterar taxas em:</label>
-                    <input type="date" name="alterar_taxas_em" id="alterar_taxas_em" value="<?= !empty($op['alterar_taxas_em']) ? $op['alterar_taxas_em'] : date('Y-m-d') ?>" required>
-                </div>
-                <div class="form-item">
-                    <label for="alterar_dia_debito" style="color: white;">Dia do Débito:</label>
-                    <input type="number" name="alterar_dia_debito" id="alterar_dia_debito" value="<?= $op['alterar_dia_debito'] ?>" min="1" max="31" required>
-                </div>
-                <div class="form-item">
-                    <label for="alterar_correcao_monetaria" style="color: white;">Correção monetária (%):</label>
-                    <input type="text" step="0.001" name="alterar_correcao_monetaria" id="alterar_correcao_monetaria" value="<?= number_format($op['alterar_correcao_monetaria'], 3, ',', '') ?>" pattern="^[0-9]+([,\.][0-9]+)?$" required>
-                </div>
-                <div class="form-item">
-                    <label for="alterar_juros_nominais" style="color: white;">Juros nominais (%):</label>
-                    <input type="text" step="0.001" name="alterar_juros_nominais" id="alterar_juros_nominais" value="<?= number_format($op['alterar_juros_nominais'], 3, ',', '') ?>" pattern="^[0-9]+([,\.][0-9]+)?$" required>
-                </div>
-            </div>
-
             <br><br>
 
-            <!-- Multa e Honorários -->
             <div class="form-row">
                 <div class="form-item">
                     <label for="valor_multa" style="color: white;">Valor da multa (R$):</label>
@@ -314,7 +277,6 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                 </div>
             </div>
 
-            <!-- Observação -->
             <div class="form-item">
                 <label for="observacao" style="color: white;">Observação:</label>
                 <textarea name="observacao" id="observacao" placeholder="Opcional"><?= htmlspecialchars($op['observacao']) ?></textarea>
@@ -322,7 +284,7 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
 
             <div class="button-group">
                 <button type="submit" class="btn-criar">Salvar alterações</button>
-                <button type="button" onclick="document.getElementById('parametrosModal').style.display = 'flex'" class="btn-criar">Parâmetros da Operação</button>
+                <button type="button" class="btn-criar" onclick="document.getElementById('parametrosModal').style.display='flex'">Configurar Juros</button>
             </div>
         </form>
 
@@ -331,7 +293,6 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
 
         <h1 class="section-title" style="color: white;">Lançamentos</h1>
 
-        <!-- Tabela de Lançamentos Editável -->
         <table class="tabela-extrato">
             <thead>
                 <tr>
@@ -343,7 +304,6 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                 </tr>
             </thead>
             <tbody>
-                <!-- Formulário para novo lançamento -->
                 <tr>
                     <form method="POST" id="formNovoLancamento">
                         <input type="hidden" name="adicionar_lancamento" value="1">
@@ -372,7 +332,6 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                     </form>
                 </tr>
 
-                <!-- Lançamentos existentes -->
                 <?php
                 $lancamentos->data_seek(0);
                 while ($l = $lancamentos->fetch_assoc()):
@@ -380,7 +339,7 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                     <tr data-id="<?= $l['id'] ?>">
                         <td class="editable" data-field="data"><?= date('d/m/Y', strtotime($l['data'])) ?></td>
                         <td class="editable" data-field="descricao"><?= htmlspecialchars($l['descricao']) ?></td>
-                        <td class="editable" data-field="valor">R$ <?= number_format($l['valor'], 2, ',', '.') ?></td>
+                        <td class="editable" data-field="valor"><?= number_format($l['valor'], 2, ',', '.') ?></td>
                         <td class="editable-select" data-field="tipo">
                             <?= $l['tipo'] === 'debito' ? 'Débito' : 'Crédito' ?>
                         </td>
@@ -403,7 +362,6 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
 
         <h1 class="section-title" style="color: white;">Extrato do Cálculo</h1>
 
-        <!-- Tabela de Resumo do Extrato -->
         <table class="tabela-extrato">
             <thead>
                 <tr>
@@ -417,17 +375,16 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
             </thead>
             <tbody>
                 <tr>
-                    <td>R$ <?= number_format($movimentacao, 2, ',', '.') ?></td>
-                    <td>R$ <?= number_format($correcao, 2, ',', '.') ?></td>
-                    <td>R$ <?= number_format($juros, 2, ',', '.') ?></td>
-                    <td>R$ <?= number_format($multa, 2, ',', '.') ?></td>
-                    <td>R$ <?= number_format($honorarios, 2, ',', '.') ?></td>
-                    <td>R$ <?= number_format($saldo_atualizado, 2, ',', '.') ?></td>
+                    <td><?= number_format($movimentacao, 2, ',', '.') ?></td>
+                    <td><?= number_format($correcao, 2, ',', '.') ?></td>
+                    <td><?= number_format($juros, 2, ',', '.') ?></td>
+                    <td><?= number_format($multa, 2, ',', '.') ?></td>
+                    <td><?= number_format($honorarios, 2, ',', '.') ?></td>
+                    <td><?= number_format($saldo_atualizado, 2, ',', '.') ?></td>
                 </tr>
             </tbody>
         </table>
 
-        <!-- Tabela de Extrato Detalhado -->
         <table class="tabela-extrato">
             <thead>
                 <tr>
@@ -437,17 +394,17 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                     <th>Crédito</th>
                     <th>Saldo</th>
                     <th>Índices</th>
-                    <th>Dias corridos</th>
+                    <th>Dias</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($valores['extrato_detalhado'] as $linha): ?>
+                <?php foreach (($valores['extrato_detalhado'] ?? []) as $linha): ?>
                     <tr>
                         <td><?= htmlspecialchars($linha['data']) ?></td>
                         <td><?= htmlspecialchars($linha['descricao']) ?></td>
-                        <td class="debito"><?= $linha['debito'] ? 'R$ ' . number_format($linha['debito'], 2, ',', '.') : '' ?></td>
-                        <td class="credito"><?= $linha['credito'] ? 'R$ ' . number_format($linha['credito'], 2, ',', '.') : '' ?></td>
-                        <td>R$ <?= number_format($linha['saldo'], 2, ',', '.') ?></td>
+                        <td class="debito"><?= $linha['debito'] ? '' . number_format($linha['debito'], 2, ',', '.') : '' ?></td>
+                        <td class="credito"><?= $linha['credito'] ? '' . number_format($linha['credito'], 2, ',', '.') : '' ?></td>
+                        <td><?= number_format($linha['saldo'], 2, ',', '.') ?></td>
                         <td><?= htmlspecialchars($linha['indice']) ?></td>
                         <td><?= htmlspecialchars($linha['dias_corridos'] ?? 0) ?></td>
                     </tr>
@@ -457,7 +414,6 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
         <br>
     </div>
 
-    <!-- Modal de edição -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <h3>Editar Lançamento</h3>
@@ -498,79 +454,25 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
         </div>
     </div>
 
-    <!-- Modal de Parâmetros da Operação -->
     <div id="parametrosModal" class="modal">
-        <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-content" style="max-width: 400px;">
             <h3>Parâmetros da operação</h3>
+            <form id="parametrosForm">
+                <input type="hidden" name="id" value="<?= $id ?>">
+                
+                <div style="margin-bottom: 20px;">
+                    <label><strong>Tipo de Juros</strong></label><br>
+                    <input type="radio" id="juros_simples" name="tipo_juros" value="simples" <?= ($op['tipo_juros'] ?? 'composto') == 'simples' ? 'checked' : '' ?>>
+                    <label for="juros_simples">Simples</label><br>
+                    <input type="radio" id="juros_composto" name="tipo_juros" value="composto" <?= ($op['tipo_juros'] ?? 'composto') == 'composto' ? 'checked' : '' ?>>
+                    <label for="juros_composto">Composto</label>
+                </div>
 
-            <div style="margin-bottom: 5px;">
-                <label><strong>Divisor de Juros</strong></label><br>
-                <input type="radio" id="ano360" name="divisor_juros" value="360" <?= ($op['divisor_juros'] ?? 365) == 360 ? 'checked' : '' ?>>
-                <label for="ano360">Ano com 360 dias</label><br>
-                <input type="radio" id="ano365" name="divisor_juros" value="365" <?= ($op['divisor_juros'] ?? 365) == 365 ? 'checked' : '' ?>>
-                <label for="ano365">Ano com 365 dias</label>
-            </div>
-
-            <div style="margin-bottom: 5px;">
-                <label><strong>Tipo de Juros</strong></label><br>
-                <input type="radio" id="juros_simples" name="tipo_juros" value="simples" <?= ($op['tipo_juros'] ?? 'composto') == 'simples' ? 'checked' : '' ?>>
-                <label for="juros_simples">Simples</label><br>
-                <input type="radio" id="juros_composto" name="tipo_juros" value="composto" <?= ($op['tipo_juros'] ?? 'composto') == 'composto' ? 'checked' : '' ?>>
-                <label for="juros_composto">Composto</label>
-            </div>
-
-            <div style="margin-bottom: 5px;">
-                <label><strong>Tipo de Lançamento</strong></label><br>
-                <input type="radio" id="moeda_original" name="tipo_lancamento" value="original" <?= ($op['tipo_lancamento'] ?? 'reais') == 'original' ? 'checked' : '' ?>>
-                <label for="moeda_original">Em moeda original</label><br>
-                <input type="radio" id="moeda_reais" name="tipo_lancamento" value="reais" <?= ($op['tipo_lancamento'] ?? 'reais') == 'reais' ? 'checked' : '' ?>>
-                <label for="moeda_reais">Em reais</label>
-            </div>
-
-            <div style="margin-bottom: 5px;">
-                <label><strong>Modo de Operação</strong></label><br>
-                <input type="radio" id="modo_outros" name="modo_operacao" value="outros" <?= ($op['modo_operacao'] ?? 'credito_rural') == 'outros' ? 'checked' : '' ?>>
-                <label for="modo_outros">Outros</label><br>
-                <input type="radio" id="modo_credito_rural" name="modo_operacao" value="credito_rural" <?= ($op['modo_operacao'] ?? 'credito_rural') == 'credito_rural' ? 'checked' : '' ?>>
-                <label for="modo_credito_rural">Crédito Rural</label>
-            </div>
-
-            <div style="margin-bottom: 5px;">
-                <label><strong>Resolução 2.471?</strong></label><br>
-                <input type="radio" id="resolucao_sim" name="resolucao_2471" value="1" <?= ($op['resolucao_2471'] ?? 0) == 1 ? 'checked' : '' ?>>
-                <label for="resolucao_sim">Sim</label><br>
-                <input type="radio" id="resolucao_nao" name="resolucao_2471" value="0" <?= ($op['resolucao_2471'] ?? 0) == 0 ? 'checked' : '' ?>>
-                <label for="resolucao_nao">Não</label>
-            </div>
-
-            <div style="margin-bottom: 5px;">
-                <label><strong>Indexadores mensais</strong></label><br>
-                <input type="radio" id="indexador_mes_atual" name="indexador_mensal" value="mes_atual" <?= ($op['indexador_mensal'] ?? 'mes_anterior') == 'mes_atual' ? 'checked' : '' ?>>
-                <label for="indexador_mes_atual">Utilizar próprio mês</label><br>
-                <input type="radio" id="indexador_mes_anterior" name="indexador_mensal" value="mes_anterior" <?= ($op['indexador_mensal'] ?? 'mes_anterior') == 'mes_anterior' ? 'checked' : '' ?>>
-                <label for="indexador_mes_anterior">Utilizar mês anterior</label>
-            </div>
-
-            <div style="margin-bottom: 5px;">
-                <label><strong>Não utilizar valores negativos (deflação)?</strong></label><br>
-                <input type="radio" id="valores_negativos_sim" name="valores_negativos" value="1" <?= ($op['valores_negativos'] ?? 0) == 1 ? 'checked' : '' ?>>
-                <label for="valores_negativos_sim">Sim</label><br>
-                <input type="radio" id="valores_negativos_nao" name="valores_negativos" value="0" <?= ($op['valores_negativos'] ?? 0) == 0 ? 'checked' : '' ?>>
-                <label for="valores_negativos_nao">Não</label>
-            </div>
-
-            <div style="margin-bottom: 5px;">
-                <label><strong>Corrigir apenas os saldos devedores (Conta Corrente)?</strong></label><br>
-                <input type="radio" id="corrigir_saldos_sim" name="corrigir_saldos" value="1" <?= ($op['corrigir_saldos'] ?? 0) == 1 ? 'checked' : '' ?>>
-                <label for="corrigir_saldos_sim">Sim</label><br>
-                <input type="radio" id="corrigir_saldos_nao" name="corrigir_saldos" value="0" <?= ($op['corrigir_saldos'] ?? 0) == 0 ? 'checked' : '' ?>>
-                <label for="corrigir_saldos_nao">Não</label>
-            </div>
-
-            <div class="modal-actions">
-                <button type="button" onclick="document.getElementById('parametrosModal').style.display = 'none'" class="modal-button modal-cancel">Cancelar</button>
-                <button type="button" onclick="salvarParametros()" class="modal-button modal-save">Salvar</button>
-            </div>
+                <div class="modal-actions">
+                    <button type="button" onclick="document.getElementById('parametrosModal').style.display = 'none'" class="modal-button modal-cancel">Cancelar</button>
+                    <button type="button" onclick="salvarParametros()" class="modal-button modal-save">Salvar</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -671,60 +573,70 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
 
         // Função para salvar parâmetros
         function salvarParametros() {
+            const id = <?= $id ?>;
+            const tipo_juros = document.querySelector('input[name="tipo_juros"]:checked')?.value;
+
+            if (!tipo_juros) {
+                alert('Por favor, selecione o tipo de juros');
+                return;
+            }
+
             const formData = new FormData();
-            formData.append('id', <?= $id ?>);
-            formData.append('divisor_juros', document.querySelector('input[name="divisor_juros"]:checked').value);
-            formData.append('tipo_juros', document.querySelector('input[name="tipo_juros"]:checked').value);
-            formData.append('tipo_lancamento', document.querySelector('input[name="tipo_lancamento"]:checked').value);
-            formData.append('modo_operacao', document.querySelector('input[name="modo_operacao"]:checked').value);
-            formData.append('resolucao_2471', document.querySelector('input[name="resolucao_2471"]:checked').value);
-            formData.append('indexador_mensal', document.querySelector('input[name="indexador_mensal"]:checked').value);
-            formData.append('valores_negativos', document.querySelector('input[name="valores_negativos"]:checked').value);
-            formData.append('corrigir_saldos', document.querySelector('input[name="corrigir_saldos"]:checked').value);
+            formData.append('id', id);
+            formData.append('tipo_juros', tipo_juros);
+
+            const btnSalvar = document.querySelector('#parametrosModal .modal-save');
+            btnSalvar.disabled = true;
+            btnSalvar.innerHTML = 'Salvando...';
 
             fetch('../../includes/salvar_parametros.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Parâmetros salvos com sucesso!');
-                    document.getElementById('parametrosModal').style.display = 'none';
-                    location.reload();
-                } else {
-                    alert('Erro ao salvar parâmetros: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Erro ao salvar parâmetros');
-            });
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Parâmetros atualizados com sucesso!');
+                        document.getElementById('parametrosModal').style.display = 'none';
+                        location.reload();
+                    } else {
+                        throw new Error(data.error || 'Erro ao salvar parâmetros');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message);
+                })
+                .finally(() => {
+                    btnSalvar.disabled = false;
+                    btnSalvar.innerHTML = 'Salvar';
+                });
         }
 
         // Validação do primeiro débito
         document.getElementById('formNovoLancamento').addEventListener('submit', function(e) {
             const tipo = this.querySelector('select[name="tipo"]').value;
             const existeDebito = <?= existeDebitoNaOperacao($mysqli, $id) ? 'true' : 'false' ?>;
-            
+
             if (!existeDebito && tipo !== 'debito') {
                 alert('ATENÇÃO: O primeiro lançamento deve ser um DÉBITO');
                 e.preventDefault();
                 return false;
             }
-            
+
             // Validação adicional para valor positivo
             const valorInput = this.querySelector('input[name="valor"]');
             const valor = parseFloat(valorInput.value.replace(',', '.'));
-            
+
             if (isNaN(valor) || valor <= 0) {
                 alert('O valor deve ser um número positivo!');
                 e.preventDefault();
                 return false;
             }
-            
+
             return true;
         });
     </script>
 </body>
+
 </html>
