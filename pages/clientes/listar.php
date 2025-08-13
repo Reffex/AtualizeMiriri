@@ -49,7 +49,7 @@ if (!empty($termo)) {
             <h1 class="clientes-titulo">Clientes</h1><br>
 
             <?php if (isset($_GET['sucesso'])): ?>
-                <div id="alerta-msg">
+                <div id="alerta-msg" class="alerta-msg">
                     <?php if ($_GET['sucesso'] == 1): ?>
                         Cliente cadastrado!
                     <?php elseif ($_GET['sucesso'] == 3): ?>
