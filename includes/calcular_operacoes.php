@@ -14,78 +14,73 @@ function calcular_operacao($mysqli, $operacao, $lancamentos_result)
     ];
 
     try {
+        // Configurações básicas
         $indexador = $operacao['indexador'];
         $periodicidade = strtolower($operacao['periodicidade']);
         $correcao_pct = (float)$operacao['atualizar_correcao_monetaria'] / 100;
         $juros_pct = (float)$operacao['atualizar_juros_nominais'] / 100;
         $dia_debito = (int)$operacao['atualizar_dia_debito'];
         $data_fim = new DateTime($operacao['atualizar_ate']);
-        $tipo_juros = $operacao['tipo_juros'] ?? 'composto';
+        $tipo_juros = $operacao['tipo_juros'];
         $valor_multa = (float)$operacao['valor_multa'];
         $valor_honorarios = (float)$operacao['valor_honorarios'];
+        $base_temporal_juros = $operacao['base_temporal_juros'] ?? 'mensal'; // 'mensal' ou 'anual'
 
+        // Converter taxa anual para mensal se necessário
+        if ($base_temporal_juros === 'anual') {
+            $juros_pct = pow(1 + $juros_pct, 1 / 12) - 1;
+        }
+
+        // Ordenar lançamentos por data
         $lancamentos = $lancamentos_result->fetch_all(MYSQLI_ASSOC);
         usort($lancamentos, fn($a, $b) => strtotime($a['data']) - strtotime($b['data']));
 
+        // Encontrar primeiro débito e seu valor para o cálculo de juros simples
         $primeiro_debito = null;
+        $valor_principal_debito = 0.0;
         foreach ($lancamentos as $l) {
             if (strtolower($l['tipo']) === 'debito') {
                 $primeiro_debito = new DateTime($l['data']);
+                $valor_principal_debito = (float)$l['valor'];
                 break;
             }
         }
-        if (!$primeiro_debito) throw new Exception("É necessário pelo menos um débito para iniciar os cálculos.");
-
-        $saldo = 0.0;
-        $total_movimentacao = 0.0;
-
-        // ---- INÍCIO DO CÓDIGO CORRIGIDO ----
-        
-        // 1. Criar um array unificado com todas as datas de eventos (lançamentos e correções)
-        $eventos = [];
-        foreach ($lancamentos as $l) {
-            $eventos[] = ['data' => new DateTime($l['data']), 'tipo' => 'lancamento', 'detalhes' => $l];
+        if (!$primeiro_debito) {
+            throw new Exception("É necessário pelo menos um débito para iniciar os cálculos.");
         }
 
+        // Preparar datas de atualização
+        $datas_correcao = [];
         $data_corrente = clone $primeiro_debito;
-        $data_corrente->setTime(0, 0, 0); // Zera o horário para evitar problemas de comparação
-        
+
         while ($data_corrente <= $data_fim) {
             $ultimo_dia_mes = (int)$data_corrente->format('t');
             $dia_aplicavel = min($dia_debito, $ultimo_dia_mes);
             $data_atualizacao = new DateTime($data_corrente->format('Y-m-') . str_pad($dia_aplicavel, 2, '0', STR_PAD_LEFT));
-            
+
             if ($data_atualizacao >= $primeiro_debito && $data_atualizacao <= $data_fim) {
-                // Adiciona a data de atualização mensal
-                $eventos[] = ['data' => $data_atualizacao, 'tipo' => 'correcao'];
+                $datas_correcao[] = $data_atualizacao;
             }
             $data_corrente->modify('first day of next month');
         }
-        
-        // Adiciona a data final do cálculo como um evento de correção
-        if ($data_fim > end($eventos)['data']) {
-             $eventos[] = ['data' => $data_fim, 'tipo' => 'correcao'];
+
+        // Adicionar data final ao array de datas de correção, se ainda não estiver presente.
+        $ultima_data_correcao_gerada = end($datas_correcao);
+        if ($data_fim > $ultima_data_correcao_gerada) {
+            $datas_correcao[] = clone $data_fim;
         }
 
-        // 2. Ordenar todos os eventos cronologicamente
-        usort($eventos, fn($a, $b) => $a['data']->getTimestamp() - $b['data']->getTimestamp());
-        
-        // 3. Processar cada evento em ordem
-        $ultima_data_processada = clone $primeiro_debito;
-        $ultima_data_processada->modify('-1 day');
+        // Processar cálculos
+        $saldo = 0.0;
+        $i = 0;
+        $total_movimentacao = 0.0;
+        $ultima_correcao = clone $primeiro_debito;
 
-        foreach ($eventos as $evento) {
-            $data_evento = $evento['data'];
-            
-            // Ignora eventos com datas iguais ou anteriores à última processada
-            if ($data_evento <= $ultima_data_processada) {
-                continue;
-            }
-
-            // Aplica correção e juros para o período desde a última data processada
-            $dias = calcular_dias_corridos($ultima_data_processada, $data_evento, $indexador, $mysqli);
-            if ($dias > 0) {
-                $indice_pct = obter_indice_periodo($mysqli, $ultima_data_processada, $data_evento, $indexador);
+        foreach ($datas_correcao as $data_corrente) {
+            if ($data_corrente > $ultima_correcao) {
+                // Calcular correção monetária
+                $dias = calcular_dias_corridos($ultima_correcao, $data_corrente, $indexador, $mysqli);
+                $indice_pct = obter_indice_periodo($mysqli, $ultima_correcao, $data_corrente, $indexador);
                 $fator_correcao = 1 + ($indice_pct / 100) * $correcao_pct;
                 $valor_correcao = $saldo * ($fator_correcao - 1);
                 $saldo += $valor_correcao;
@@ -93,7 +88,7 @@ function calcular_operacao($mysqli, $operacao, $lancamentos_result)
 
                 if (abs($valor_correcao) > 0.0001) {
                     $extrato[] = [
-                        'data' => $data_evento->format('d/m/Y'),
+                        'data' => $data_corrente->format('d/m/Y'),
                         'descricao' => 'Correção Monetária',
                         'debito' => $valor_correcao < 0 ? abs($valor_correcao) : 0,
                         'credito' => $valor_correcao > 0 ? $valor_correcao : 0,
@@ -103,43 +98,52 @@ function calcular_operacao($mysqli, $operacao, $lancamentos_result)
                     ];
                 }
 
+                // Calcular juros (apenas para saldo negativo)
                 if ($juros_pct > 0 && $saldo < 0) {
-                    if ($tipo_juros === 'composto') {
-                        $dias_base_anual = stripos($indexador, 'CDI') !== false ? 252 : 365;
-                        $taxa_diaria = pow(1 + $juros_pct, 1 / $dias_base_anual) - 1;
-                        $juros = abs($saldo) * (pow(1 + $taxa_diaria, $dias) - 1);
-                    } else {
-                        $dias_base_anual = stripos($indexador, 'CDI') !== false ? 252 : 365;
-                        $juros = abs($saldo) * $juros_pct * ($dias / $dias_base_anual);
-                    }
+                    $dias_corridos_juros = $ultima_correcao->diff($data_corrente)->days;
 
-                    $saldo -= $juros;
-                    $totais['juros'] -= $juros;
+                    if ($dias_corridos_juros > 0) {
+                        if ($tipo_juros === 'composto') {
+                            // Juros compostos: calculados sobre o saldo acumulado
+                            $juros = abs($saldo) * (pow(1 + $juros_pct, $dias_corridos_juros / 30) - 1);
+                        } else {
+                            // Juros simples: calculados sobre o valor principal inicial
+                            $juros = abs($valor_principal_debito) * $juros_pct * ($dias_corridos_juros / 30);
+                        }
 
-                    if ($juros > 0.0001) {
-                        $extrato[] = [
-                            'data' => $data_evento->format('d/m/Y'),
-                            'descricao' => 'Juros Nominais',
-                            'debito' => $juros,
-                            'credito' => 0,
-                            'saldo' => round($saldo, 4),
-                            'indice' => number_format($juros_pct * 100, 3),
-                            'dias_corridos' => $dias
-                        ];
+                        $saldo -= $juros;
+                        $totais['juros'] -= $juros;
+
+                        if ($juros > 0.0001) {
+                            $extrato[] = [
+                                'data' => $data_corrente->format('d/m/Y'),
+                                'descricao' => 'Juros ' . ($tipo_juros === 'composto' ? 'Compostos' : 'Simples'),
+                                'debito' => $juros,
+                                'credito' => 0,
+                                'saldo' => round($saldo, 4),
+                                'indice' => number_format($juros_pct * 100, 3) . '',
+                                'dias_corridos' => $dias_corridos_juros
+                            ];
+                        }
                     }
                 }
+
+                $ultima_correcao = clone $data_corrente;
             }
 
-            // Aplica os lançamentos que ocorreram nesta data
-            if ($evento['tipo'] === 'lancamento') {
-                $l = $evento['detalhes'];
+            // Processar lançamentos até a data corrente
+            while ($i < count($lancamentos)) {
+                $l_data = new DateTime($lancamentos[$i]['data']);
+                if ($l_data > $data_corrente) break;
+
+                $l = $lancamentos[$i];
                 $valor = (float)$l['valor'];
                 $tipo = strtolower($l['tipo']);
                 $saldo += ($tipo === 'credito') ? $valor : -$valor;
                 $total_movimentacao += ($tipo === 'credito') ? $valor : -$valor;
 
                 $extrato[] = [
-                    'data' => $data_evento->format('d/m/Y'),
+                    'data' => $l_data->format('d/m/Y'),
                     'descricao' => $l['descricao'],
                     'debito' => $tipo === 'debito' ? $valor : 0,
                     'credito' => $tipo === 'credito' ? $valor : 0,
@@ -147,13 +151,12 @@ function calcular_operacao($mysqli, $operacao, $lancamentos_result)
                     'indice' => '',
                     'dias_corridos' => 0
                 ];
+
+                $i++;
             }
-            
-            $ultima_data_processada = $data_evento;
         }
 
-        // ---- FIM DO CÓDIGO CORRIGIDO ----
-        
+        // Aplicar multa e honorários no final (se saldo negativo)
         if ($saldo < 0) {
             if ($valor_multa > 0) {
                 $saldo -= $valor_multa;
