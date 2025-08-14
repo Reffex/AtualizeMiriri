@@ -10,8 +10,16 @@ try {
     $tipo_juros = $data['tipo_juros'] ?? 'composto';
     $id = isset($data['id']) ? (int) $data['id'] : 0;
 
-    $stmt = $mysqli->prepare("UPDATE operacoes SET tipo_juros = ? WHERE id = ?");
-    $stmt->bind_param("si", $tipo_juros, $id);
+    $stmt = $mysqli->prepare("UPDATE operacoes SET 
+        tipo_juros = ?
+        WHERE id = ?
+    ");
+
+    $stmt->bind_param(
+        "si",
+        $tipo_juros,
+        $id
+    );
 
     if ($stmt->execute()) {
         echo json_encode(['success' => true]);
