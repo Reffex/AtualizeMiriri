@@ -64,7 +64,7 @@ $stmt->execute();
 $lancamentos = $stmt->get_result();
 
 // Calcular operação
-require_once '../../includes/calcular_operacoes.php';
+require_once '../../includes/calcular_operacao.php';
 $valores = calcular_operacao($mysqli, $op, $lancamentos);
 
 // Processar formulários
@@ -255,11 +255,11 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
                     <input type="number" name="atualizar_dia_debito" id="atualizar_dia_debito" min="1" max="31" value="<?= $op['atualizar_dia_debito'] ?>" required>
                 </div>
                 <div class="form-item">
-                    <label for="atualizar_correcao_monetaria" style="color: white;">Correção monetária (%):</label>
+                    <label for="atualizar_correcao_monetaria" style="color: white;">Correção (%):</label>
                     <input type="text" step="0.001" name="atualizar_correcao_monetaria" id="atualizar_correcao_monetaria" value="<?= number_format($op['atualizar_correcao_monetaria'], 3, ',', '') ?>" pattern="^[0-9]+([,\.][0-9]+)?$" required>
                 </div>
                 <div class="form-item">
-                    <label for="atualizar_juros_nominais" style="color: white;">Juros nominais (%):</label>
+                    <label for="atualizar_juros_nominais" style="color: white;">Juros (%):</label>
                     <input type="text" step="0.001" name="atualizar_juros_nominais" id="atualizar_juros_nominais" value="<?= number_format($op['atualizar_juros_nominais'], 3, ',', '') ?>" pattern="^[0-9]+([,\.][0-9]+)?$" required>
                 </div>
             </div>
@@ -365,9 +365,9 @@ $movimentacao = $valores['movimentacao'] ?? 0.0;
         <table class="tabela-extrato">
             <thead>
                 <tr>
-                    <th>Movimentação<br>acumulada no<br>período</th>
-                    <th>Correção<br>monetária<br>acumulada no<br>período</th>
-                    <th>Juros<br>acumulados<br>no período</th>
+                    <th>Movimentação<br>acumulada
+                    <th>Correção<br>acumulada
+                    <th>Juros<br>acumulados
                     <th>Multa</th>
                     <th>Honorários</th>
                     <th>Saldo total<br>atualizado</th>
