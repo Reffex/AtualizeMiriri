@@ -146,11 +146,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <input type="number" name="atualizar_dia_debito" id="atualizar_dia_debito" min="1" max="31" value="1" required>
                 </div>
                 <div class="form-item">
-                    <label for="atualizar_correcao_monetaria">Correção monetária (%):</label>
+                    <label for="atualizar_correcao_monetaria">Correção (%):</label>
                     <input type="text" step="0.001" name="atualizar_correcao_monetaria" id="atualizar_correcao_monetaria" value="100,000" pattern="^[0-9]+([,\.][0-9]+)?$" required>
                 </div>
                 <div class="form-item">
-                    <label for="atualizar_juros_nominais">Juros nominais (%):</label>
+                    <label for="atualizar_juros_nominais">Juros (%):</label>
                     <input type="text" step="0.001" name="atualizar_juros_nominais" id="atualizar_juros_nominais" value="12,000" pattern="^[0-9]+([,\.][0-9]+)?$" required>
                 </div>
             </div>
