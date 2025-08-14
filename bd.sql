@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS `clientes` (
   `data_cadastro` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `documento` (`documento`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Exportação de dados foi desmarcado.
 
@@ -36,10 +36,10 @@ CREATE TABLE IF NOT EXISTS `indices` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `nome` varchar(20) DEFAULT NULL,
   `data_referencia` date DEFAULT NULL,
-  `valor` decimal(10,4) DEFAULT NULL,
+  `valor` decimal(20,10) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nome` (`nome`,`data_referencia`)
-) ENGINE=InnoDB AUTO_INCREMENT=1009 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=27475 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Exportação de dados foi desmarcado.
 
@@ -49,12 +49,13 @@ CREATE TABLE IF NOT EXISTS `lancamentos` (
   `operacao_id` int(11) DEFAULT NULL,
   `data` date NOT NULL,
   `descricao` varchar(100) NOT NULL,
-  `valor` decimal(10,2) NOT NULL,
+  `valor` decimal(19,2) NOT NULL,
+  `valor_original` decimal(19,2) DEFAULT NULL,
   `tipo` enum('debito','credito') NOT NULL,
   PRIMARY KEY (`id`),
   KEY `operacao_id` (`operacao_id`),
   CONSTRAINT `lancamentos_ibfk_1` FOREIGN KEY (`operacao_id`) REFERENCES `operacoes` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Exportação de dados foi desmarcado.
 
@@ -65,23 +66,19 @@ CREATE TABLE IF NOT EXISTS `operacoes` (
   `identificador` varchar(50) NOT NULL,
   `indexador` varchar(50) NOT NULL,
   `periodicidade` varchar(20) NOT NULL,
-  `valor_inicial` decimal(10,2) NOT NULL,
   `atualizar_ate` date DEFAULT NULL,
   `atualizar_dia_debito` int(11) DEFAULT NULL,
-  `atualizar_correcao_monetaria` decimal(10,3) DEFAULT NULL,
-  `atualizar_juros_nominais` decimal(10,3) DEFAULT NULL,
-  `alterar_taxas_em` date DEFAULT NULL,
-  `alterar_dia_debito` int(11) DEFAULT NULL,
-  `alterar_correcao_monetaria` decimal(10,3) DEFAULT NULL,
-  `alterar_juros_nominais` decimal(10,3) DEFAULT NULL,
-  `valor_multa` decimal(10,2) DEFAULT NULL,
-  `valor_honorarios` decimal(10,2) DEFAULT NULL,
+  `atualizar_correcao_monetaria` decimal(19,4) DEFAULT NULL,
+  `atualizar_juros_nominais` decimal(19,4) DEFAULT NULL,
+  `valor_multa` decimal(19,4) DEFAULT NULL,
+  `valor_honorarios` decimal(19,4) DEFAULT NULL,
   `observacao` text DEFAULT NULL,
+  `tipo_juros` enum('simples','composto') NOT NULL DEFAULT 'composto',
   `data_criacao` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `cliente_id` (`cliente_id`),
   CONSTRAINT `operacoes_ibfk_1` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Exportação de dados foi desmarcado.
 
@@ -94,7 +91,7 @@ CREATE TABLE IF NOT EXISTS `usuarios` (
   `data_cadastro` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Exportação de dados foi desmarcado.
 
