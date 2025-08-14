@@ -1,7 +1,6 @@
 <?php
 function obter_indice($mysqli, $indexador, $data)
 {
-    // Converter DateTime para string se necessário
     if ($data instanceof DateTime) {
         $data = $data->format('Y-m-d');
     }
@@ -89,7 +88,7 @@ function obter_indice_periodo($mysqli, $data_inicio, $data_fim, $indexador)
     $data_fim_str = $data_fim->format('Y-m-d');
 
     if (stripos($indexador, 'CDI') !== false) {
-        // Para CDI, somar diariamente (excluindo fins de semana)
+        // Para CDI
         $query = "SELECT valor FROM indices 
                   WHERE nome = ? AND data_referencia BETWEEN ? AND ? 
                   AND DAYOFWEEK(data_referencia) NOT IN (1,7)";
@@ -103,9 +102,9 @@ function obter_indice_periodo($mysqli, $data_inicio, $data_fim, $indexador)
             $cdi = (float)$row['valor'];
             $fator *= (1 + $cdi / 100);
         }
-        return ($fator - 1) * 100; // retorna percentual acumulado
+        return ($fator - 1) * 100;
     } elseif (stripos($indexador, 'IPCA') !== false) {
-        // Para IPCA, pegar valor mensal do mês anterior à data_fim
+        // Para IPCA
         $mes_ref = (clone $data_fim)->modify('first day of previous month')->format('Y-m-d');
 
         $query = "SELECT valor FROM indices 
@@ -126,10 +125,10 @@ function obter_indice_periodo($mysqli, $data_inicio, $data_fim, $indexador)
             $fator_correcao = pow(1 + ($ipca_mensal / 100), ($dias_periodo / $dias_no_mes));
             return ($fator_correcao - 1) * 100;
         } else {
-            return $ipca_mensal; // Retorna o IPCA completo
+            return $ipca_mensal; 
         }
     }
-    return 0.0; // Se o índice não for reconhecido
+    return 0.0; 
 }
 
 function calcular_dias_uteis($inicio, $fim, $mysqli = null)
@@ -145,8 +144,8 @@ function calcular_dias_uteis($inicio, $fim, $mysqli = null)
     $data = clone $inicio;
 
     while ($data <= $fim) {
-        $dia_semana = $data->format('N'); // 1 (segunda) a 7 (domingo)
-        if ($dia_semana < 6) { // Considera apenas seg-sex
+        $dia_semana = $data->format('N'); 
+        if ($dia_semana < 6) { 
             $dias_uteis++;
         }
         $data->modify('+1 day');
@@ -181,7 +180,6 @@ function calcular_dias_corridos($data_inicio, $data_fim, $indexador, $mysqli)
         return (int)($row['total'] ?? 0);
     }
 
-    // Agora com segurança
     return $data_inicio->diff($data_fim)->days;
 }
 
@@ -194,13 +192,13 @@ function calcular_dias_uteis_entre_datas($data_inicio, $data_fim)
         $data_fim = new DateTime($data_fim);
     }
 
-    $dias = 0;
+    $dias = 0; 
     $intervalo = DateInterval::createFromDateString('1 day');
     $periodo = new DatePeriod($data_inicio, $intervalo, $data_fim);
 
     foreach ($periodo as $data) {
-        $dia_semana = (int)$data->format('N'); // 1 = Segunda, 7 = Domingo
-        if ($dia_semana < 6) { // Conta apenas de segunda a sexta
+        $dia_semana = (int)$data->format('N'); 
+        if ($dia_semana < 6) { 
             $dias++;
         }
     }
