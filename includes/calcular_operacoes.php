@@ -1,8 +1,7 @@
 <?php
 require_once 'funcoes_indices.php';
 
-function calcular_operacao($mysqli, $operacao, $lancamentos_result)
-{
+function calcular_operacao($mysqli, $operacao, $lancamentos_result) {
     $extrato = [];
     $totais = [
         'movimentacao' => 0,
@@ -28,7 +27,7 @@ function calcular_operacao($mysqli, $operacao, $lancamentos_result)
 
         // Converter taxa anual para mensal se necessário
         if ($base_temporal_juros === 'anual') {
-            $juros_pct = pow(1 + $juros_pct, 1 / 12) - 1;
+            $juros_pct = pow(1 + $juros_pct, 1/12) - 1;
         }
 
         // Ordenar lançamentos por data
@@ -52,12 +51,12 @@ function calcular_operacao($mysqli, $operacao, $lancamentos_result)
         // Preparar datas de atualização
         $datas_correcao = [];
         $data_corrente = clone $primeiro_debito;
-
+        
         while ($data_corrente <= $data_fim) {
             $ultimo_dia_mes = (int)$data_corrente->format('t');
             $dia_aplicavel = min($dia_debito, $ultimo_dia_mes);
             $data_atualizacao = new DateTime($data_corrente->format('Y-m-') . str_pad($dia_aplicavel, 2, '0', STR_PAD_LEFT));
-
+            
             if ($data_atualizacao >= $primeiro_debito && $data_atualizacao <= $data_fim) {
                 $datas_correcao[] = $data_atualizacao;
             }
@@ -101,7 +100,7 @@ function calcular_operacao($mysqli, $operacao, $lancamentos_result)
                 // Calcular juros (apenas para saldo negativo)
                 if ($juros_pct > 0 && $saldo < 0) {
                     $dias_corridos_juros = $ultima_correcao->diff($data_corrente)->days;
-
+                    
                     if ($dias_corridos_juros > 0) {
                         if ($tipo_juros === 'composto') {
                             // Juros compostos: calculados sobre o saldo acumulado
