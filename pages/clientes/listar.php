@@ -60,7 +60,7 @@ if (!empty($termo)) {
 
             <div class="botao-centralizado" style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <a href="cadastrar.php">
-                    <button class="login botao-criar">Criar Cliente</button>
+                    <button class="login botao-criar">Cadastrar Cliente</button>
                 </a>
             </div>
 
